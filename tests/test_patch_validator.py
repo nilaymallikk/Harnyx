@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from nova.engineering.patch import CodeHook, HarnessPatch
-from nova.engineering.validation import PatchValidator
+from harnyx.engineering.patch import CodeHook, HarnessPatch
+from harnyx.engineering.validation import PatchValidator
 
 SAFE = "def hook(ctx, nb):\n    return None\n"
 
@@ -68,7 +68,7 @@ def test_wrong_action_type_rejected() -> None:
 
 
 def test_raise_if_invalid_raises() -> None:
-    from nova.errors import PatchValidationError
+    from harnyx.errors import PatchValidationError
 
     result = PatchValidator().validate(make_patch())
     with pytest.raises(PatchValidationError):

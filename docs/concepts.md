@@ -1,13 +1,13 @@
 # Concepts
 
 ## Agent
-A frozen decision policy plus its base runtime. In NOVA an agent is anything
+A frozen decision policy plus its base runtime. In Harnyx an agent is anything
 implementing `run(task, harness=None, recorder=None) -> AgentResult`. The base
-runtime is `nova.core.agent.HarnessedAgent`, which drives the four lifecycle
+runtime is `harnyx.core.agent.HarnessedAgent`, which drives the four lifecycle
 hooks around a `Policy` and an `Environment`.
 
 ## Harness
-The editable runtime surrounding the policy. NOVA harnesses expose exactly four
+The editable runtime surrounding the policy. Harnyx harnesses expose exactly four
 methods and can only return structured `HookEffect`s. `BaseHarness` is the no-op
 `harness-v0`. `ExecutableHarness` is built from a validated patch.
 

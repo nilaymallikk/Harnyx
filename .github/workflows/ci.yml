@@ -33,4 +33,4 @@ jobs:
           python-version: "3.11"
       - run: pip install -e .
       - name: Deterministic end-to-end demo
-        run: nova run --run-dir runs/ci
+        run: harnyx run --run-dir runs/ci

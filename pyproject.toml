@@ -3,13 +3,13 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nova-harness"
+name = "harnyx"
 version = "0.1.0"
-description = "NOVA: learn to improve executable AI-agent harnesses from failure trajectories (a Harness-R1 implementation)."
+description = "Harnyx: learn to improve executable AI-agent harnesses from failure trajectories (a Harness-R1 implementation)."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
-authors = [{ name = "NOVA contributors" }]
+authors = [{ name = "Harnyx contributors" }]
 keywords = ["agents", "harness", "llm", "reinforcement-learning", "harness-r1"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -28,7 +28,7 @@ dev = ["pytest>=7.0", "ruff>=0.5", "mypy>=1.10", "PyYAML>=6.0"]
 docker = ["docker>=7.0"]
 
 [project.scripts]
-nova = "nova.cli.main:main"
+harnyx = "harnyx.cli.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -50,4 +50,4 @@ ignore = ["E501"]
 python_version = "3.11"
 warn_unused_ignores = true
 ignore_missing_imports = true
-packages = ["nova"]
+packages = ["harnyx"]

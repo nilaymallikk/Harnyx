@@ -3,16 +3,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from nova.adapters.nyvero import (
+from harnyx.adapters.nyvero import (
     NyveroAgentAdapter,
     NyveroHarnessAdapter,
     build_hook_bridge,
 )
-from nova.core.harness import ExecutableHarness, HookContext
-from nova.core.task import Task
-from nova.demo.toy import TOY_BENCHMARK, build_toy_patch_text
-from nova.engineering.patch import extract_patch
-from nova.sandbox.runner import LocalSandbox
+from harnyx.core.harness import ExecutableHarness, HookContext
+from harnyx.core.task import Task
+from harnyx.demo.toy import TOY_BENCHMARK, build_toy_patch_text
+from harnyx.engineering.patch import extract_patch
+from harnyx.sandbox.runner import LocalSandbox
 
 
 @dataclass
@@ -38,7 +38,7 @@ class FakeNyveroAgent:
     def rollout(self, instruction: str, *, hooks=None, **kwargs: Any) -> FakeNyveroRollout:
         assert hooks is not None
         assert set(hooks) == {"on_init", "make_pre_hint", "on_before_action", "on_post_step"}
-        # The bridge must expose NOVA harness effects as raw mappings.
+        # The bridge must expose Harnyx harness effects as raw mappings.
         _ = hooks["on_before_action"](
             {
                 "benchmark": "toy",

@@ -4,7 +4,7 @@ An evaluator runs an agent over a task batch and returns an `EvaluationResult`
 keyed by `Task.id` (so baseline and patched runs can be compared per task).
 
 ```python
-from nova.core.result import EvaluationResult
+from harnyx.core.result import EvaluationResult
 
 class Evaluator(Protocol):
     name: str
@@ -40,7 +40,7 @@ class MyEvaluator:
 Use `HarnessR1BenchmarkAdapter` for a harness-aware external runner:
 
 ```python
-from nova.evaluation.harness_r1 import HarnessR1BenchmarkAdapter
+from harnyx.evaluation.harness_r1 import HarnessR1BenchmarkAdapter
 
 evaluator = HarnessR1BenchmarkAdapter(runner, benchmark="webshop")
 ```

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from nova.core.result import EvaluationResult
-from nova.core.task import Task
-from nova.core.trajectory import Trajectory, TrajectoryRecorder
-from nova.optimization.failure_analysis import (
+from harnyx.core.result import EvaluationResult
+from harnyx.core.task import Task
+from harnyx.core.trajectory import Trajectory, TrajectoryRecorder
+from harnyx.optimization.failure_analysis import (
     FailurePacket,
     TraceFailureAnalyzer,
     compute_signals,
@@ -79,7 +79,7 @@ def test_compute_signals_counts_errors_and_noops() -> None:
 
 
 def test_select_cases_strategies() -> None:
-    from nova.optimization.failure_analysis import FailureCase
+    from harnyx.optimization.failure_analysis import FailureCase
 
     made = [FailureCase(task_id=f"t{i}", reward=float(i) / 10) for i in range(5)]
     assert len(select_cases(made, 3, "lowest_reward")) == 3

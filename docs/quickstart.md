@@ -9,13 +9,13 @@ pip install -e .
 ## 2. Run the deterministic toy demo
 
 ```bash
-nova run --run-dir runs --candidates 3
+harnyx run --run-dir runs --candidates 3
 ```
 
 Expected output:
 
 ```text
-NOVA toy demo
+Harnyx toy demo
   research run directory : runs/<timestamp>
   baseline success       : 0/1  (mean reward 0.000)
   patched success        : 1/1  (mean reward 1.000)
@@ -40,8 +40,8 @@ cat runs/<timestamp>/accepted_patch.json
 See [`custom-agent.md`](custom-agent.md). Then:
 
 ```python
-from nova import HarnessOptimizer, LocalEvaluator
-from nova.optimization.optimizer import OptimizationConfig
+from harnyx import HarnessOptimizer, LocalEvaluator
+from harnyx.optimization.optimizer import OptimizationConfig
 
 result = HarnessOptimizer(
     agent, engineer,
@@ -55,12 +55,12 @@ result = HarnessOptimizer(
 ## 4. Configure an LLM engineer
 
 ```yaml
-# configs/nova.example.yaml
+# configs/harnyx.example.yaml
 engineer:
   provider: openai_compatible
   model: Qwen3.5-9B-engineer
   base_url: http://localhost:8000/v1
-  api_key_env: NOVA_ENGINEER_API_KEY
+  api_key_env: HARNYX_ENGINEER_API_KEY
 optimization:
   candidates: 8
   iterations: 5
@@ -72,21 +72,21 @@ evaluation:
 ```
 
 ```bash
-export NOVA_ENGINEER_API_KEY=...
-nova optimize --config configs/nova.example.yaml --plugin mypkg.plugin:build
+export HARNYX_ENGINEER_API_KEY=...
+harnyx optimize --config configs/harnyx.example.yaml --plugin mypkg.plugin:build
 ```
 
 ## 5. Inspect trajectories
 
 ```bash
-nova inspect-trajectory runs/<timestamp>/... --task-id task-3
+harnyx inspect-trajectory runs/<timestamp>/... --task-id task-3
 ```
 
 ## 6. Run ablations on the toy benchmark
 
 ```python
-from nova.demo.toy import build_toy_agent, build_toy_tasks
-from nova.experiments.ablations import run_all_ablations
+from harnyx.demo.toy import build_toy_agent, build_toy_tasks
+from harnyx.experiments.ablations import run_all_ablations
 
 for r in run_all_ablations(build_toy_agent(), build_toy_tasks(), benchmark="toy", run_root="runs/ablations"):
     print(r.key, r.name, f"{r.reward:+.3f}")

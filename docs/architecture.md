@@ -1,6 +1,6 @@
 # Architecture
 
-NOVA is built in layers with one rule: no layer imports upward, and no layer
+Harnyx is built in layers with one rule: no layer imports upward, and no layer
 depends on a specific model provider, benchmark, or training framework.
 
 ```text
@@ -49,7 +49,7 @@ depends on a specific model provider, benchmark, or training framework.
   regression-aware selection (`selection.py`), and the loop (`optimizer.py`).
 - **evaluation** — `LocalEvaluator`, `HarnessR1BenchmarkAdapter`, metrics, and
   `RunDirectory` for reproducible artifacts.
-- **adapters** — translate external agents/runtimes into NOVA interfaces.
+- **adapters** — translate external agents/runtimes into Harnyx interfaces.
 - **llm** — provider protocol plus an OpenAI-compatible stdlib client.
 - **training** — SFT dataset/config and GRPO config/bridge, isolated from core.
 - **experiments** — ablation arms A–F.
@@ -73,7 +73,7 @@ arbitrary host control.
 
 ## Determinism
 
-- `nova.core.types.canonical_json` sorts keys and uses compact separators.
+- `harnyx.core.types.canonical_json` sorts keys and uses compact separators.
 - Run directories, failure packets, candidates, rewards, and reports are JSON/JSONL.
 - The reward is deterministic whenever the evaluator is; the toy demo and all
   tests are fully deterministic.

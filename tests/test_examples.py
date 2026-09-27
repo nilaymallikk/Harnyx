@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from nova.engineering.patch import extract_patch
-from nova.engineering.validation import PatchValidator
+from harnyx.engineering.patch import extract_patch
+from harnyx.engineering.validation import PatchValidator
 
 REPO = Path(__file__).resolve().parents[1]
 

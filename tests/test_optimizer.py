@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from nova.core.result import EvaluationResult
-from nova.demo.toy import TOY_BENCHMARK, build_toy_agent, build_toy_patch_text, build_toy_tasks, run_demo
-from nova.engineering.harness_engineer import ScriptedHarnessEngineer
-from nova.engineering.patch import CodeHook, HarnessPatch, extract_patch
-from nova.engineering.validation import ValidationResult
-from nova.optimization.optimizer import HarnessOptimizer, OptimizationConfig
-from nova.optimization.patch_generation import CandidatePatch
-from nova.optimization.reward import RewardResult
-from nova.optimization.selection import CandidateSelector, ScoredCandidate
+from harnyx.core.result import EvaluationResult
+from harnyx.demo.toy import TOY_BENCHMARK, build_toy_agent, build_toy_patch_text, build_toy_tasks, run_demo
+from harnyx.engineering.harness_engineer import ScriptedHarnessEngineer
+from harnyx.engineering.patch import CodeHook, HarnessPatch, extract_patch
+from harnyx.engineering.validation import ValidationResult
+from harnyx.optimization.optimizer import HarnessOptimizer, OptimizationConfig
+from harnyx.optimization.patch_generation import CandidatePatch
+from harnyx.optimization.reward import RewardResult
+from harnyx.optimization.selection import CandidateSelector, ScoredCandidate
 
 
 def _toy_patch() -> HarnessPatch:
@@ -105,7 +105,7 @@ def test_reward_is_deterministic_across_runs(tmp_path) -> None:
 
 
 def test_version_store_rollback(tmp_path) -> None:
-    from nova.versioning import HarnessVersionStore
+    from harnyx.versioning import HarnessVersionStore
 
     store = HarnessVersionStore(tmp_path / "versions")
     v1 = store.record(patch={"x": 1}, reward=1.0)

@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import json
 
-from nova.core.task import Task
-from nova.core.trajectory import TrajectoryRecorder
-from nova.demo.toy import TOY_BENCHMARK, build_toy_patch_text
-from nova.engineering.patch import extract_patch
-from nova.optimization.failure_analysis import FailurePacket, TraceFailureAnalyzer
-from nova.training.dataset import (
+from harnyx.core.task import Task
+from harnyx.core.trajectory import TrajectoryRecorder
+from harnyx.demo.toy import TOY_BENCHMARK, build_toy_patch_text
+from harnyx.engineering.patch import extract_patch
+from harnyx.optimization.failure_analysis import FailurePacket, TraceFailureAnalyzer
+from harnyx.training.dataset import (
     SFTDatasetBuilder,
     assistant_response_from_patch,
     filter_training_records,
     write_sft_dataset,
 )
-from nova.training.grpo import GRPOConfig, HarnessPatchReward
-from nova.training.sft import SFTConfig
+from harnyx.training.grpo import GRPOConfig, HarnessPatchReward
+from harnyx.training.sft import SFTConfig
 
 
 def _packet() -> FailurePacket:

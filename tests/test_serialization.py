@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 
-from nova.core.result import EvaluationResult
-from nova.core.task import Task
-from nova.core.trajectory import TrajectoryRecorder
-from nova.core.types import (
+from harnyx.core.result import EvaluationResult
+from harnyx.core.task import Task
+from harnyx.core.trajectory import TrajectoryRecorder
+from harnyx.core.types import (
     append_jsonl,
     canonical_json,
     read_json,
@@ -13,8 +13,8 @@ from nova.core.types import (
     write_json,
     write_jsonl,
 )
-from nova.engineering.patch import CodeHook, HarnessPatch
-from nova.optimization.failure_analysis import FailurePacket, TraceFailureAnalyzer
+from harnyx.engineering.patch import CodeHook, HarnessPatch
+from harnyx.optimization.failure_analysis import FailurePacket, TraceFailureAnalyzer
 
 
 def test_canonical_json_is_deterministic() -> None:

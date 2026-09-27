@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from nova.engineering.patch import HarnessPatch, extract_json_object, extract_patch
-from nova.errors import PatchParseError, PatchValidationError
+from harnyx.engineering.patch import HarnessPatch, extract_json_object, extract_patch
+from harnyx.errors import PatchParseError, PatchValidationError
 
 VALID_RESPONSE = """<think>
 Recurring failures show a premature submit.

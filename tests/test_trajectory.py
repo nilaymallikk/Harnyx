@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 
-from nova.core.task import Task
-from nova.core.trajectory import Trajectory, TrajectoryRecorder
+from harnyx.core.task import Task
+from harnyx.core.trajectory import Trajectory, TrajectoryRecorder
 
 
 def test_recorder_builds_serializable_trajectory(tmp_path) -> None:
@@ -50,7 +50,7 @@ def test_trajectory_round_trip() -> None:
 
 
 def test_trajectory_step_round_trip() -> None:
-    from nova.core.trajectory import TrajectoryStep
+    from harnyx.core.trajectory import TrajectoryStep
 
     step = TrajectoryStep(index=3, observation="o", action={"name": "n"}, error="e", state={"k": 1})
     restored = TrajectoryStep.from_dict(step.to_dict())

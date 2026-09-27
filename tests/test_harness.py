@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from nova.core.harness import (
+from harnyx.core.harness import (
     ACTION_EFFECT_KINDS,
     BaseHarness,
     ExecutableHarness,
@@ -8,8 +8,8 @@ from nova.core.harness import (
     HookEffect,
     merge_init_effects,
 )
-from nova.engineering.patch import CodeHook, HarnessPatch
-from nova.sandbox.runner import LocalSandbox
+from harnyx.engineering.patch import CodeHook, HarnessPatch
+from harnyx.sandbox.runner import LocalSandbox
 
 GOOD_HOOK = """def hook(ctx, nb):
     action = ctx.get('action') or {}

@@ -1,14 +1,14 @@
-"""Example NOVA plugin used by the CLI.
+"""Example Harnyx plugin used by the CLI.
 
 The scenario: a frozen policy reports a value before inspecting the data. A
 pre-action guard blocks the report until the agent has counted. This is the same
 shape as the toy demo but with a different environment, demonstrating how to plug
-a custom agent/tasks/engineer into ``nova optimize``.
+a custom agent/tasks/engineer into ``harnyx optimize``.
 
 Usage::
 
-    nova optimize --plugin examples.plugins.verify_agent:build
-    nova evaluate --plugin examples.plugins.verify_agent:build
+    harnyx optimize --plugin examples.plugins.verify_agent:build
+    harnyx evaluate --plugin examples.plugins.verify_agent:build
 """
 
 from __future__ import annotations
@@ -16,14 +16,14 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from nova import (
+from harnyx import (
     Action,
     HarnessedAgent,
     ScriptedHarnessEngineer,
     StepResult,
     Task,
 )
-from nova.engineering.patch import CodeHook, HarnessPatch
+from harnyx.engineering.patch import CodeHook, HarnessPatch
 
 BENCHMARK = "verify"
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from nova.demo.toy import TOY_BENCHMARK, build_toy_agent, build_toy_tasks
-from nova.engineering.random_engineer import RandomHarnessEngineer
-from nova.engineering.validation import PatchValidator
-from nova.experiments.ablations import ABLATIONS, run_ablation, run_all_ablations
+from harnyx.demo.toy import TOY_BENCHMARK, build_toy_agent, build_toy_tasks
+from harnyx.engineering.random_engineer import RandomHarnessEngineer
+from harnyx.engineering.validation import PatchValidator
+from harnyx.experiments.ablations import ABLATIONS, run_ablation, run_all_ablations
 
 
 def test_random_engineer_produces_valid_patches() -> None:

@@ -1,7 +1,7 @@
 # Nyvero adapter
 
-Nyvero is **never** a dependency of NOVA core. `nova.adapters.nyvero` translates
-between NOVA's `Agent`/`Harness` interfaces and a small, documented duck-typed
+Nyvero is **never** a dependency of Harnyx core. `harnyx.adapters.nyvero` translates
+between Harnyx's `Agent`/`Harness` interfaces and a small, documented duck-typed
 Nyvero contract. Nothing in the module imports Nyvero.
 
 ## Adapter contract
@@ -25,29 +25,29 @@ returning a raw effect mapping.
 ## Usage
 
 ```python
-from nova.adapters.nyvero import NyveroAgentAdapter, NyveroHarnessAdapter
+from harnyx.adapters.nyvero import NyveroAgentAdapter, NyveroHarnessAdapter
 
-# Translate a Nyvero agent into a NOVA Agent.
-nova_agent = NyveroAgentAdapter(nyvero_agent, benchmark="nyvero")
+# Translate a Nyvero agent into a Harnyx Agent.
+harnyx_agent = NyveroAgentAdapter(nyvero_agent, benchmark="nyvero")
 
-# Expose a Nyvero harness through NOVA's controlled harness API.
-nova_harness = NyveroHarnessAdapter(nyvero_harness)
+# Expose a Nyvero harness through Harnyx's controlled harness API.
+harnyx_harness = NyveroHarnessAdapter(nyvero_harness)
 
-result = nova_agent.run(task, harness=nova_harness)
+result = harnyx_agent.run(task, harness=harnyx_harness)
 ```
 
-Or let NOVA install a *generated* patch on a Nyvero agent:
+Or let Harnyx install a *generated* patch on a Nyvero agent:
 
 ```python
-from nova import ExecutableHarness, LocalSandbox, HarnessOptimizer
+from harnyx import ExecutableHarness, LocalSandbox, HarnessOptimizer
 
 harness = ExecutableHarness.from_patch(patch, sandbox=LocalSandbox())
-HarnessOptimizer(nova_agent, engineer, benchmark="nyvero", run_dir="runs").optimize(tasks)
+HarnessOptimizer(harnyx_agent, engineer, benchmark="nyvero", run_dir="runs").optimize(tasks)
 ```
 
-`NyveroAgentAdapter` builds the hook bridge (`build_hook_bridge`) so NOVA harness
+`NyveroAgentAdapter` builds the hook bridge (`build_hook_bridge`) so Harnyx harness
 effects reach Nyvero as raw mappings, and normalizes the returned rollout into a
-NOVA `Trajectory` and `AgentResult`.
+Harnyx `Trajectory` and `AgentResult`.
 
 ## Effect normalization
 

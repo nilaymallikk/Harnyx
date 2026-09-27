@@ -14,7 +14,7 @@ class Harness(Protocol):
 The standard implementation is `ExecutableHarness`, built from a patch:
 
 ```python
-from nova import ExecutableHarness, LocalSandbox, HarnessPatch
+from harnyx import ExecutableHarness, LocalSandbox, HarnessPatch
 
 patch = HarnessPatch.from_dict({
     "benchmark": "mybench",

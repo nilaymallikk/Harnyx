@@ -10,11 +10,11 @@ class Agent(Protocol):
 
 ## Option 1 — the generic runtime
 
-Supply a `Policy` and an `Environment`. NOVA's `HarnessedAgent` drives the loop
+Supply a `Policy` and an `Environment`. Harnyx's `HarnessedAgent` drives the loop
 and calls the four harness hooks.
 
 ```python
-from nova import Action, Task, HarnessedAgent, StepResult
+from harnyx import Action, Task, HarnessedAgent, StepResult
 
 class MyEnv:
     name = "myenv"
@@ -41,7 +41,7 @@ Optional environment hooks:
 ## Option 2 — wrap an existing runner
 
 ```python
-from nova import AgentResult, TrajectoryRecorder
+from harnyx import AgentResult, TrajectoryRecorder
 
 class MyAgent:
     name = "wrapped"
@@ -64,7 +64,7 @@ the pending action), and `on_post_step` may return `inject_hint` or
 ## Option 3 — benchmark adapter
 
 ```python
-from nova.evaluation.harness_r1 import HarnessR1BenchmarkAdapter
+from harnyx.evaluation.harness_r1 import HarnessR1BenchmarkAdapter
 
 evaluator = HarnessR1BenchmarkAdapter(my_runner, benchmark="webshop")
 ```

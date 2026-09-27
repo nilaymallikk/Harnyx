@@ -1,1 +1,1 @@
-"""NOVA examples."""
+"""Harnyx examples."""

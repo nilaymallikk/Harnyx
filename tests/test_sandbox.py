@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from nova.errors import PatchCompileError, SandboxTimeout
-from nova.sandbox.isolation import SubprocessSandbox
-from nova.sandbox.limits import SandboxLimits
-from nova.sandbox.runner import LocalSandbox, normalize_effect
+from harnyx.errors import PatchCompileError, SandboxTimeout
+from harnyx.sandbox.isolation import SubprocessSandbox
+from harnyx.sandbox.limits import SandboxLimits
+from harnyx.sandbox.runner import LocalSandbox, normalize_effect
 
 
 def test_compile_and_run_safe_hook_updates_notebook() -> None:

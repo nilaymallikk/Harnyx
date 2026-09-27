@@ -1,8 +1,8 @@
-# NOVA
+# Harnyx
 
 **Learn to improve executable AI-agent harnesses from failure trajectories.**
 
-NOVA is a clean, agent-agnostic Python library implementing the
+Harnyx is a clean, agent-agnostic Python library implementing the
 [Harness-R1](https://arxiv.org/abs/2608.02276) methodology: mine a batch of
 target-agent failures, have a harness engineer propose an executable runtime
 patch, sandbox it, rerun the *same* tasks, and accept it only when a real
@@ -19,16 +19,16 @@ target agent rollout
   -> accept / reject (with regression protection) -> versioned harness
 ```
 
-NOVA is not an agent framework. It is the *optimization loop around* an agent:
+Harnyx is not an agent framework. It is the *optimization loop around* an agent:
 the harness is the editable object, not the model weights.
 
 ---
 
 ## Relationship to Harness-R1
 
-NOVA is an independent implementation of the method in
+Harnyx is an independent implementation of the method in
 **"Harness-R1: Learning to Edit Executable Runtime Harnesses from Agent Failure
-Trajectories"** (Shao et al., 2026). The paper/repository and NOVA map
+Trajectories"** (Shao et al., 2026). The paper/repository and Harnyx map
 component-by-component in [`docs/reproduction.md`](docs/reproduction.md).
 
 - **Reproduced faithfully:** the four executable lifecycle hooks
@@ -41,7 +41,7 @@ component-by-component in [`docs/reproduction.md`](docs/reproduction.md).
   training delegates to TRL instead of vendoring Relax; only the released
   code-hook protocol is implemented (not the legacy six-action DSL). See
   [`docs/reproduction.md`](docs/reproduction.md#intentional-deviations).
-- **NOVA extensions (opt-in):** patch caching, failure clustering, and an
+- **Harnyx extensions (opt-in):** patch caching, failure clustering, and an
   explicit regression suite. See [`docs/research.md`](docs/research.md).
 
 Reference implementation: <https://github.com/DeepExperience/Harness-R1>
@@ -50,7 +50,7 @@ Reference implementation: <https://github.com/DeepExperience/Harness-R1>
 ## Architecture
 
 ```text
-nova/
+harnyx/
 ├── core/          Task, Trajectory, Agent, Harness (hook contract), Result
 ├── engineering/   HarnessPatch, parser, PatchValidator, HarnessEngineer, prompts
 ├── sandbox/       AST policy, LocalSandbox, SubprocessSandbox, limits
@@ -61,7 +61,7 @@ nova/
 ├── training/      SFT dataset/config, GRPO config + TRL bridge
 ├── experiments/   A–F ablation harness
 ├── demo/          Deterministic toy end-to-end
-└── cli/           nova <command>
+└── cli/           harnyx <command>
 ```
 
 The hard boundary: **frozen policy** (never edited) vs **editable harness**
@@ -84,18 +84,18 @@ Requires Python ≥ 3.11. Core has **zero runtime dependencies**.
 The deterministic toy demo needs no model, GPU, or benchmark assets:
 
 ```bash
-nova run
+harnyx run
 # baseline success 0/1, patched success 1/1, engineer reward +1.000
 ```
 
 Or in Python:
 
 ```python
-from nova.demo.toy import run_demo
+from harnyx.demo.toy import run_demo
 
 print(run_demo("runs", candidates=3))
 
-from nova import (
+from harnyx import (
     ExecutableHarness, FailurePacket, LocalEvaluator, LocalSandbox,
     ScriptedHarnessEngineer, HarnessOptimizer,
 )
@@ -104,14 +104,14 @@ from nova import (
 A full optimization over your own agent:
 
 ```python
-from nova import HarnessOptimizer, LocalEvaluator, LLMHarnessEngineer
-from nova.llm.openai import OpenAICompatibleProvider
-from nova.optimization.optimizer import OptimizationConfig
+from harnyx import HarnessOptimizer, LocalEvaluator, LLMHarnessEngineer
+from harnyx.llm.openai import OpenAICompatibleProvider
+from harnyx.optimization.optimizer import OptimizationConfig
 
 provider = OpenAICompatibleProvider(
     base_url="http://localhost:8000/v1",  # OpenAI / OpenRouter / vLLM / SGLang
     model="Qwen3.5-9B-engineer",
-    env_key="NOVA_ENGINEER_API_KEY",
+    env_key="HARNYX_ENGINEER_API_KEY",
 )
 engineer = LLMHarnessEngineer(provider, benchmark="mybench")
 
@@ -123,7 +123,7 @@ optimizer = HarnessOptimizer(
     config=OptimizationConfig(candidates=8, iterations=3),
     run_dir="runs",
 )
-result = optimizer.optimize(tasks)          # tasks: list[nova.Task]
+result = optimizer.optimize(tasks)          # tasks: list[harnyx.Task]
 print(result.final.mean_reward - result.baseline.mean_reward)
 ```
 
@@ -132,22 +132,22 @@ See [`docs/quickstart.md`](docs/quickstart.md) and
 
 ## Nyvero example
 
-Nyvero is never a dependency of NOVA core. The adapter targets a documented
+Nyvero is never a dependency of Harnyx core. The adapter targets a documented
 duck-typed contract (see [`docs/nyvero.md`](docs/nyvero.md)):
 
 ```python
-from nova.adapters.nyvero import NyveroAgentAdapter, NyveroHarnessAdapter
+from harnyx.adapters.nyvero import NyveroAgentAdapter, NyveroHarnessAdapter
 
-nova_agent = NyveroAgentAdapter(nyvero_agent, benchmark="nyvero")
-nova_harness = NyveroHarnessAdapter(nyvero_harness)  # expose Nyvero's harness
-result = nova_agent.run(task, harness=nova_harness)
+harnyx_agent = NyveroAgentAdapter(nyvero_agent, benchmark="nyvero")
+harnyx_harness = NyveroHarnessAdapter(nyvero_harness)  # expose Nyvero's harness
+result = harnyx_agent.run(task, harness=harnyx_harness)
 ```
 
 ## Reproduction instructions
 
 ```bash
 # Deterministic local end-to-end (works in CI, no model)
-nova run
+harnyx run
 
 # Full local reproduction: toy loop + A-F ablations + security smoke
 python examples/reproduction/run_local_reproduction.py --run-root runs/reproduction
@@ -172,7 +172,7 @@ Generated harness code is untrusted. Every candidate passes:
 parse -> schema validation -> AST policy -> sandbox smoke test -> execution
 ```
 
-`nova.sandbox.policy` rejects imports, filesystem/network/subprocess access,
+`harnyx.sandbox.policy` rejects imports, filesystem/network/subprocess access,
 dynamic evaluation (`eval`/`exec`/`compile`), dunder/attribute escapes,
 `getattr`/`setattr`/`globals`/`locals`, async/class/with/lambda/while/yield,
 generators, raise, and benchmark-answer leakage (e.g. numbered ALFWorld
@@ -186,10 +186,10 @@ variables.
 
 ## Benchmarks and adapters
 
-NOVA ships a deterministic local evaluator and a benchmark adapter. The reference
+Harnyx ships a deterministic local evaluator and a benchmark adapter. The reference
 paper's WebShop (500 tasks), ALFWorld (500 tasks), and DBBench (300 tasks) are
 supported through `HarnessR1BenchmarkAdapter` but their runtimes are not bundled.
-It is deliberately *not* a core dependency of NOVA.
+It is deliberately *not* a core dependency of Harnyx.
 
 ## Limitations
 
@@ -220,6 +220,6 @@ It is deliberately *not* a core dependency of NOVA.
 
 ## License
 
-Apache-2.0. NOVA is an independent implementation; see [`NOTICE`](NOTICE) for
+Apache-2.0. Harnyx is an independent implementation; see [`NOTICE`](NOTICE) for
 attribution of the Harness-R1 reference implementation, Life-Harness/AgentBench,
 Relax, and the benchmark environments.

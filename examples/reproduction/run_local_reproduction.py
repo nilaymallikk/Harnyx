@@ -27,9 +27,9 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO / "src") not in sys.path:
     sys.path.insert(0, str(REPO / "src"))
 
-from nova.demo.toy import TOY_BENCHMARK, build_toy_agent, build_toy_tasks, run_demo  # noqa: E402
-from nova.experiments.ablations import ABLATIONS, run_all_ablations  # noqa: E402
-from nova.sandbox.runner import LocalSandbox  # noqa: E402
+from harnyx.demo.toy import TOY_BENCHMARK, build_toy_agent, build_toy_tasks, run_demo  # noqa: E402
+from harnyx.experiments.ablations import ABLATIONS, run_all_ablations  # noqa: E402
+from harnyx.sandbox.runner import LocalSandbox  # noqa: E402
 
 
 def security_smoke() -> dict[str, bool]:

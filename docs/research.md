@@ -3,7 +3,7 @@
 This document separates three things and never blurs them:
 
 1. **Harness-R1 reproduction** — the paper method, faithfully implemented.
-2. **NOVA extensions** — additions made only after the reproduction path exists.
+2. **Harnyx extensions** — additions made only after the reproduction path exists.
 3. **Reproduction experiments** — what was actually run, and what was not.
 
 No benchmark number in this repository is fabricated.
@@ -33,7 +33,7 @@ and writes `runs/reproduction/reproduction.json`.
 
 ## 2. Deterministic end-to-end result
 
-The toy benchmark (`nova.demo.toy`) mirrors the paper's WebShop premature-purchase
+The toy benchmark (`harnyx.demo.toy`) mirrors the paper's WebShop premature-purchase
 case at miniature scale. It requires no model and is deterministic:
 
 | Arm | Baseline reward | Patched reward | Engineer reward |
@@ -46,7 +46,7 @@ selection, real versioning (`harness-v1`), real run artifacts.
 
 ## 3. Ablations (local, deterministic)
 
-`nova.experiments.ablations` implements arms A–F. On the toy benchmark:
+`harnyx.experiments.ablations` implements arms A–F. On the toy benchmark:
 
 | Key | Arm | Toy reward |
 |---|---|---|
@@ -55,7 +55,7 @@ selection, real versioning (`harness-v1`), real run artifacts.
 | C | no outcome feedback (first valid) | 1.0 |
 | D | outcome selection | 1.0 |
 | E | full Harness-R1 (trained engineer) | 1.0 on toy; not runnable without a trained engineer |
-| F | NOVA extension (cache + clustering + regression guard) | 1.0 |
+| F | Harnyx extension (cache + clustering + regression guard) | 1.0 |
 
 Arms C–F coincide on a single-task toy because the scripted engineer always
 proposes the correct patch. They separate only when proposals vary in quality,
@@ -101,7 +101,7 @@ reproduced.**
 4. Run the A–F ablations with the released engineer and the target-specific
    splits, seeding baselines per the reference protocol.
 
-## 6. NOVA extensions (separate from reproduction)
+## 6. Harnyx extensions (separate from reproduction)
 
 Implemented and opt-in:
 

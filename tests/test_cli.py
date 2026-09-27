@@ -4,10 +4,10 @@ import json
 
 import pytest
 
-from nova.cli.main import main
-from nova.core.task import Task
-from nova.core.trajectory import TrajectoryRecorder
-from nova.core.types import write_jsonl
+from harnyx.cli.main import main
+from harnyx.core.task import Task
+from harnyx.core.trajectory import TrajectoryRecorder
+from harnyx.core.types import write_jsonl
 
 
 def _trajectory_rows(path) -> None:
@@ -20,7 +20,7 @@ def _trajectory_rows(path) -> None:
 def test_cli_run(tmp_path, capsys) -> None:
     assert main(["run", "--run-dir", str(tmp_path)]) == 0
     out = capsys.readouterr().out
-    assert "NOVA toy demo" in out
+    assert "Harnyx toy demo" in out
     assert "engineer reward" in out
 
 

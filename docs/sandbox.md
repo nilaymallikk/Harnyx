@@ -1,23 +1,23 @@
 # Sandbox and security model
 
-Generated harness code is **untrusted**. NOVA never trusts the engineer, the
+Generated harness code is **untrusted**. Harnyx never trusts the engineer, the
 provider, or the model output.
 
 ## Pipeline
 
 ```text
 model output
-  └─ parse <think>/<patch>                     nova.engineering.patch
-       └─ schema validation                    nova.engineering.validation
-            └─ AST policy                      nova.sandbox.policy
-                 └─ compile + smoke test       nova.sandbox.runner / isolation
+  └─ parse <think>/<patch>                     harnyx.engineering.patch
+       └─ schema validation                    harnyx.engineering.validation
+            └─ AST policy                      harnyx.sandbox.policy
+                 └─ compile + smoke test       harnyx.sandbox.runner / isolation
                       └─ execute in rollout    LocalSandbox or SubprocessSandbox
 ```
 
 Each gate is independent; a failure at any gate yields *no intervention* or a
 rejected candidate, never partial execution.
 
-## AST policy (`nova.sandbox.policy`)
+## AST policy (`harnyx.sandbox.policy`)
 
 Rejected constructs include:
 
@@ -38,7 +38,7 @@ Rejected constructs include:
 The hook signature is exactly `hook(ctx, nb)`; helpers may only use simple scalar
 defaults and no annotations or decorators.
 
-## Execution budgets (`nova.sandbox.limits.SandboxLimits`)
+## Execution budgets (`harnyx.sandbox.limits.SandboxLimits`)
 
 | Limit | Default | Meaning |
 |---|---|---|
@@ -62,7 +62,7 @@ Hooks only see:
 len, list, map, max, min, range, reversed, round, set, sorted, str, sum, tuple,
 zip`, plus `math`, `re`, and `SequenceMatcher` in the namespace.
 
-## Process isolation (`nova.sandbox.isolation.SubprocessSandbox`)
+## Process isolation (`harnyx.sandbox.isolation.SubprocessSandbox`)
 
 - fresh interpreter per call,
 - sanitized environment (`PATH`, `PYTHONPATH`, `LANG`, hash seed only — no API

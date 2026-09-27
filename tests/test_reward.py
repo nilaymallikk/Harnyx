@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from nova.core.result import EvaluationResult
-from nova.optimization.reward import OutcomeReward
+from harnyx.core.result import EvaluationResult
+from harnyx.optimization.reward import OutcomeReward
 
 
 def baseline() -> EvaluationResult:
