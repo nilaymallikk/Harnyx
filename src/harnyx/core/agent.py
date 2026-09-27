@@ -340,20 +340,3 @@ class HarnessedAgent:
             if effect.kind in {"rewrite_action", "force_action"} and effect.action:
                 return self.action_parser(effect.action), False
             return action, False
-
-
-class CallablePolicy:
-    """Adapt a plain function into a :class:`Policy` (useful for toy setups)."""
-
-    def __init__(self, fn: Callable[..., Action], *, name: str = "callable-policy") -> None:
-        self._fn = fn
-        self.name = name
-
-    def act(
-        self,
-        messages: Sequence[Mapping[str, Any]],
-        *,
-        step: int,
-        admissible: Sequence[str],
-    ) -> Action:
-        return self._fn(messages, step=step, admissible=admissible)

@@ -243,12 +243,3 @@ class ExecutableHarness(BaseHarness):
             description=getattr(patch, "description", ""),
             source_patch=patch.to_dict() if hasattr(patch, "to_dict") else None,
         )
-
-    def describe(self) -> dict[str, Any]:
-        return {
-            "name": self.name,
-            "benchmark": self.benchmark,
-            "description": self.description,
-            "hooks": list(self.hook_names),
-            "is_noop": self.is_noop,
-        }

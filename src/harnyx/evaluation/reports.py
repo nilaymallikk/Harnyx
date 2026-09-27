@@ -50,20 +50,6 @@ class RunDirectory:
         }
         return cls(root=root, run_id=run_id, files=files)
 
-    @classmethod
-    def open(cls, root: str | Path) -> RunDirectory:
-        root_path = Path(root)
-        files = {
-            "config": root_path / "config.json",
-            "baseline": root_path / "baseline.json",
-            "failures": root_path / "failures.jsonl",
-            "candidates": root_path / "candidates.jsonl",
-            "rewards": root_path / "rewards.jsonl",
-            "accepted_patch": root_path / "accepted_patch.json",
-            "report": root_path / "report.json",
-        }
-        return cls(root=root_path, run_id=root_path.name, files=files)
-
     def path(self, key: str) -> Path:
         return self.files[key]
 
@@ -87,11 +73,6 @@ class RunDirectory:
 
     def write_report(self, report: Any) -> Path:
         return write_json(self.files["report"], report)
-
-    def read_report(self) -> Any:
-        from harnyx.core.types import read_json
-
-        return read_json(self.files["report"])
 
     def to_dict(self) -> dict[str, Any]:
         return to_jsonable({"run_id": self.run_id, "root": str(self.root), "files": {k: str(v) for k, v in self.files.items()}})
