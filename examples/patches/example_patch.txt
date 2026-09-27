@@ -1,0 +1,19 @@
+Recurring failures show the policy reporting before it has inspected the data,
+so the report is rejected. The narrow, observable intervention is a pre-action
+guard: block `report` while the runtime state says the data has not been
+inspected, and prompt the policy to inspect first. This does not hard-code any
+task answer and only fires on the observable premature-report condition.
+</think>
+<patch>
+{
+  "benchmark": "verify",
+  "description": "Block report until the runtime state says the data was inspected.",
+  "actions": [
+    {
+      "type": "add_code_hook",
+      "hook": "on_before_action",
+      "code": "def hook(ctx, nb):\n    action = ctx.get('action') or {}\n    state = ctx.get('state') or {}\n    if str(action.get('name')) == 'report' and not state.get('counted'):\n        return {'kind': 'block_and_prompt', 'message': 'Inspect the data before reporting.'}\n    return None\n"
+    }
+  ]
+}
+</patch>

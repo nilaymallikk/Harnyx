@@ -1,0 +1,24 @@
+NOVA — Learning to improve executable AI-agent harnesses from failure trajectories.
+
+NOVA is an independent, clean-room Python implementation of the methodology
+described in "Harness-R1: Learning to Edit Executable Runtime Harnesses from
+Agent Failure Trajectories" (Shao et al., 2026, arXiv:2608.02276).
+
+Reference implementation: https://github.com/DeepExperience/Harness-R1
+Reference checkpoints:    https://huggingface.co/ShaoShuai0605/Harness-R1
+
+The reference implementation is released under the Apache License 2.0. NOVA
+reproduces the *methodology* (lifecycle hook contract, failure-packet
+construction, same-batch outcome reward, candidate sampling and selection) and
+does not vendor benchmark-specific runtimes, training frameworks, datasets, or
+model weights.
+
+Concepts and prompts adapted from the reference implementation:
+  Copyright 2026 Harness-R1 Authors, Apache License 2.0.
+  See NOTICE in https://github.com/DeepExperience/Harness-R1 for upstream
+  attribution of Life-Harness / AgentBench and Relax.
+
+Benchmark environments referenced by the reference paper (not bundled here):
+  WebShop   — MIT License (princeton-nlp/WebShop)
+  ALFWorld  — MIT License (alfworld/alfworld)
+  AgentBench / DBBench — Apache License 2.0 (THUDM/AgentBench)

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# NOVA artifacts
+runs/
+outputs/
+*.jsonl
+
+# Secrets
+.env
+*.key
+
+# Provided research material (not redistributed)
+2608.02276v1.pdf
+paper.txt
+https github com DeepExperience.txt
