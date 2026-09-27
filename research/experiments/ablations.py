@@ -22,11 +22,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from research.random_engineer import RandomHarnessEngineer
+
 from harnyx.core.agent import Agent
 from harnyx.core.task import Task
 from harnyx.core.types import to_jsonable, write_json
 from harnyx.engineering.harness_engineer import HarnessEngineer
-from harnyx.engineering.random_engineer import RandomHarnessEngineer
 from harnyx.evaluation.evaluator import Evaluator, LocalEvaluator
 from harnyx.optimization.optimizer import HarnessOptimizer, OptimizationConfig
 

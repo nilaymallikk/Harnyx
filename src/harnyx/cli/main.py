@@ -7,9 +7,6 @@ Commands
 ``harnyx optimize``            Run failure -> patch -> rerun -> reward -> accept.
 ``harnyx generate-failures``   Build a failure packet from trajectory JSONL.
 ``harnyx generate-patches``    Generate candidate patches for a packet.
-``harnyx build-sft-data``      Build cold-start SFT examples.
-``harnyx train-sft``           Launch cold-start SFT (requires the train extra).
-``harnyx train-grpo``          Launch online GRPO (requires the train extra).
 ``harnyx inspect-trajectory``  Pretty-print a trajectory JSONL file.
 """
 
@@ -29,7 +26,6 @@ from harnyx.core.task import Task
 from harnyx.core.trajectory import Trajectory
 from harnyx.core.types import read_json, read_jsonl, write_json, write_jsonl
 from harnyx.engineering.harness_engineer import LLMHarnessEngineer
-from harnyx.engineering.patch import HarnessPatch
 from harnyx.engineering.validation import PatchValidator
 from harnyx.errors import HarnyxError
 from harnyx.evaluation.evaluator import LocalEvaluator
@@ -39,7 +35,6 @@ from harnyx.optimization.optimizer import HarnessOptimizer, OptimizationConfig
 from harnyx.sandbox.isolation import SubprocessSandbox
 from harnyx.sandbox.limits import SandboxLimits
 from harnyx.sandbox.runner import LocalSandbox
-from harnyx.training.dataset import SFTDatasetBuilder, write_sft_dataset
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -111,30 +106,6 @@ def _build_parser() -> argparse.ArgumentParser:
     gp.add_argument("--temperature", type=float, default=0.7)
     gp.add_argument("--output", required=True, help="candidate JSONL path")
     gp.set_defaults(handler=_cmd_generate_patches)
-
-    bs = sub.add_parser("build-sft-data", help="build cold-start SFT examples")
-    bs.add_argument("--records", required=True, help="JSONL of {packet, patch} records")
-    bs.add_argument("--output", required=True)
-    bs.add_argument("--response-template", action="store_true")
-    bs.set_defaults(handler=_cmd_build_sft_data)
-
-    ts = sub.add_parser("train-sft", help="launch cold-start SFT (needs train extra)")
-    ts.add_argument("--dataset", required=True)
-    ts.add_argument("--base-model", default="Qwen3.5-9B")
-    ts.add_argument("--output-dir", default="outputs/engineer-sft")
-    ts.add_argument("--epochs", type=int, default=2)
-    ts.add_argument("--learning-rate", type=float, default=1e-5)
-    ts.add_argument("--context-length", type=int, default=32768)
-    ts.set_defaults(handler=_cmd_train_sft)
-
-    tg = sub.add_parser("train-grpo", help="launch online GRPO (needs train extra)")
-    tg.add_argument("--dataset", required=True)
-    tg.add_argument("--base-model", default="Qwen3.5-9B")
-    tg.add_argument("--output-dir", default="outputs/engineer-grpo")
-    tg.add_argument("--reward-plugin", required=True, help="module:factory returning an evaluate_patch callable")
-    tg.add_argument("--num-generations", type=int, default=8)
-    tg.add_argument("--learning-rate", type=float, default=1e-6)
-    tg.set_defaults(handler=_cmd_train_grpo)
 
     it = sub.add_parser("inspect-trajectory", help="pretty-print a trajectory JSONL")
     it.add_argument("path", help="trajectory JSONL path")
@@ -255,51 +226,6 @@ def _cmd_generate_patches(args: argparse.Namespace) -> int:
         [{"parse_ok": True, "patch": candidate.to_dict(), "hooks": list(candidate.hook_names)} for candidate in candidates],
     )
     print(f"wrote {args.output}: {len(candidates)} candidate patch(es)")
-    return 0
-
-
-def _cmd_build_sft_data(args: argparse.Namespace) -> int:
-    rows = read_jsonl(args.records)
-    builder = SFTDatasetBuilder(include_response_template=args.response_template)
-    records = []
-    for row in rows:
-        packet = FailurePacket.from_dict(row["packet"])
-        patch = HarnessPatch.from_dict(row["patch"], bench=packet.benchmark)
-        records.append((packet, patch))
-    examples = builder.build(records)
-    write_sft_dataset(examples, args.output)
-    print(f"wrote {args.output}: {len(examples)} SFT example(s)")
-    return 0
-
-
-def _cmd_train_sft(args: argparse.Namespace) -> int:
-    from harnyx.training.sft import SFTConfig, train_sft
-
-    config = SFTConfig(
-        dataset_path=args.dataset,
-        base_model=args.base_model,
-        output_dir=args.output_dir,
-        epochs=args.epochs,
-        learning_rate=args.learning_rate,
-        context_length=args.context_length,
-    )
-    train_sft(config)
-    return 0
-
-
-def _cmd_train_grpo(args: argparse.Namespace) -> int:
-    from harnyx.training.grpo import GRPOConfig, HarnessPatchReward, train_grpo
-
-    evaluate_patch = _load_factory(args.reward_plugin)
-    reward = HarnessPatchReward(evaluate_patch)
-    config = GRPOConfig(
-        dataset_path=args.dataset,
-        base_model=args.base_model,
-        output_dir=args.output_dir,
-        num_generations=args.num_generations,
-        learning_rate=args.learning_rate,
-    )
-    train_grpo(config, reward_fn=reward)
     return 0
 
 

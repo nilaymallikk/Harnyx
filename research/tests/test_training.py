@@ -2,19 +2,20 @@ from __future__ import annotations
 
 import json
 
-from harnyx.core.task import Task
-from harnyx.core.trajectory import TrajectoryRecorder
-from harnyx.demo.toy import TOY_BENCHMARK, build_toy_patch_text
-from harnyx.engineering.patch import extract_patch
-from harnyx.optimization.failure_analysis import FailurePacket, TraceFailureAnalyzer
-from harnyx.training.dataset import (
+from research.training.dataset import (
     SFTDatasetBuilder,
     assistant_response_from_patch,
     filter_training_records,
     write_sft_dataset,
 )
-from harnyx.training.grpo import GRPOConfig, HarnessPatchReward
-from harnyx.training.sft import SFTConfig
+from research.training.grpo import GRPOConfig, HarnessPatchReward
+from research.training.sft import SFTConfig
+
+from harnyx.core.task import Task
+from harnyx.core.trajectory import TrajectoryRecorder
+from harnyx.demo.toy import TOY_BENCHMARK, build_toy_patch_text
+from harnyx.engineering.patch import extract_patch
+from harnyx.optimization.failure_analysis import FailurePacket, TraceFailureAnalyzer
 
 
 def _packet() -> FailurePacket:

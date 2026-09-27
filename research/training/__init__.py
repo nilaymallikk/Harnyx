@@ -6,14 +6,14 @@ without importing anything here.
 
 from __future__ import annotations
 
-from harnyx.training.dataset import (
+from research.training.dataset import (
     SFTDatasetBuilder,
     SFTExample,
     filter_training_records,
     write_sft_dataset,
 )
-from harnyx.training.grpo import GRPOConfig, HarnessPatchReward, train_grpo
-from harnyx.training.sft import SFTConfig, train_sft
+from research.training.grpo import GRPOConfig, HarnessPatchReward, train_grpo
+from research.training.sft import SFTConfig, train_sft
 
 __all__ = [
     "GRPOConfig",

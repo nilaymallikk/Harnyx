@@ -13,7 +13,6 @@ from harnyx.engineering.patch import (
     extract_json_object,
     extract_patch,
 )
-from harnyx.engineering.random_engineer import RandomHarnessEngineer
 from harnyx.engineering.validation import PatchValidator, ValidationResult
 
 __all__ = [
@@ -22,7 +21,6 @@ __all__ = [
     "HarnessPatch",
     "LLMHarnessEngineer",
     "PatchValidator",
-    "RandomHarnessEngineer",
     "ScriptedHarnessEngineer",
     "ValidationResult",
     "extract_json_object",

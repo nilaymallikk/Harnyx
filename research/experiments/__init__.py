@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from harnyx.experiments.ablations import (
+from research.experiments.ablations import (
     ABLATIONS,
     AblationResult,
     AblationSpec,

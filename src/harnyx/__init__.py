@@ -30,7 +30,6 @@ from harnyx.core.task import Task
 from harnyx.core.trajectory import Trajectory, TrajectoryRecorder, TrajectoryStep
 from harnyx.engineering.harness_engineer import HarnessEngineer, LLMHarnessEngineer, ScriptedHarnessEngineer
 from harnyx.engineering.patch import CodeHook, HarnessPatch
-from harnyx.engineering.random_engineer import RandomHarnessEngineer
 from harnyx.engineering.validation import PatchValidator, ValidationResult
 from harnyx.evaluation.evaluator import Evaluator, LocalEvaluator
 from harnyx.evaluation.harness_r1 import HarnessR1BenchmarkAdapter
@@ -81,7 +80,6 @@ __all__ = [
     "OutcomeReward",
     "PatchValidator",
     "Policy",
-    "RandomHarnessEngineer",
     "RewardFunction",
     "RewardResult",
     "SandboxLimits",
