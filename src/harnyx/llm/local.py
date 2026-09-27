@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from harnyx.errors import ProviderError
@@ -43,24 +43,3 @@ class ScriptedProvider:
     @property
     def remaining(self) -> int:
         return len(self._responses) - self._index
-
-
-class CallableProvider:
-    """Adapt a plain function into a provider (handy for custom local models)."""
-
-    name = "callable"
-
-    def __init__(self, fn: Callable[..., str], *, model: str = "callable") -> None:
-        self._fn = fn
-        self.model = model
-
-    def complete(
-        self,
-        messages: Sequence[Mapping[str, Any]],
-        *,
-        temperature: float | None = None,
-        max_tokens: int | None = None,
-        **kwargs: Any,
-    ) -> LLMResponse:
-        text = self._fn(coerce_messages(messages), temperature=temperature, max_tokens=max_tokens, **kwargs)
-        return LLMResponse(text=str(text), model=self.model, finish_reason="stop")

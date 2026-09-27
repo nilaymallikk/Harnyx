@@ -194,10 +194,8 @@ def _cmd_optimize(args: argparse.Namespace) -> int:
         max_traces=opt.max_traces,
         selection_strategy=opt.selection_strategy,
         reward_threshold=opt.reward_threshold,
-        smoke_test=opt.smoke_test,
         patch_cache=opt.patch_cache,
         accept_first_valid=opt.accept_first_valid,
-        cluster_failures=opt.cluster_failures,
     )
     optimizer = HarnessOptimizer(
         agent,

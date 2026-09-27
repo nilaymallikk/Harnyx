@@ -72,7 +72,7 @@ pip install -e ".[train]"      # adds trl/transformers/datasets/torch (SFT/GRPO)
 pip install -e ".[yaml]"       # YAML configs only
 
 # Test / lint / type-check (run before every commit)
-pytest -q                      # 114 tests, all deterministic, no network/GPU
+pytest -q                      # 113 tests, all deterministic, no network/GPU
 ruff check src tests examples
 mypy                           # config in pyproject.toml
 

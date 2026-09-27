@@ -52,14 +52,11 @@ class OptimizationConfig:
     max_traces: int = 20
     selection_strategy: str = "round_robin"
     reward_threshold: float = 1.0
-    smoke_test: bool = False
-    # Harnyx extension: reuse candidate evaluations when the same patch is
-    # proposed for the same failure packet (deterministic evaluators).
+    # Reuse candidate evaluations when the same patch is proposed for the same
+    # failure packet (deterministic evaluators).
     patch_cache: bool = True
-    # Ablation C: accept the first valid proposal instead of the best outcome.
+    # Accept the first valid proposal instead of the best outcome.
     accept_first_valid: bool = False
-    # Harnyx extension: cluster failures by runtime signature before selection.
-    cluster_failures: bool = False
 
     def __post_init__(self) -> None:
         if self.candidates < 1:

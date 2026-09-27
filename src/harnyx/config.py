@@ -57,10 +57,8 @@ class OptimizationSettings:
     selection_strategy: str = "round_robin"
     reward_threshold: float = 1.0
     smoke_test: bool = False
-    # Harnyx extensions (beyond the Harness-R1 method).
     patch_cache: bool = True
     accept_first_valid: bool = False
-    cluster_failures: bool = False
 
 
 @dataclass(slots=True)

@@ -83,7 +83,7 @@ def _config_for(key: str) -> OptimizationConfig:
     if key == "E":
         return OptimizationConfig(candidates=8, iterations=1)
     if key == "F":
-        return OptimizationConfig(candidates=8, iterations=1, patch_cache=True, cluster_failures=True)
+        return OptimizationConfig(candidates=8, iterations=1, patch_cache=True)
     raise ValueError(f"unknown ablation key: {key!r}")
 
 

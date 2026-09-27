@@ -68,7 +68,7 @@ methodology is changed silently. Deviations are called out below.
    advantages, clipped objective) is preserved; the framework is not vendored.
 5. **Harnyx extensions.** Patch caching, failure clustering, and an explicit
    regression suite are Harnyx additions beyond the paper. They are opt-in
-   (`OptimizationConfig.patch_cache`, `cluster_failures`, `reject_regressions`)
+   (`OptimizationConfig.patch_cache`, `reject_regressions`)
    and are separated from the reproduction path.
 
 ## Reward definition (verified Eq. 1)

@@ -6,7 +6,6 @@ from harnyx.core.harness import (
     ExecutableHarness,
     HookContext,
     HookEffect,
-    merge_init_effects,
 )
 from harnyx.engineering.patch import CodeHook, HarnessPatch
 from harnyx.sandbox.runner import LocalSandbox
@@ -69,19 +68,6 @@ def test_hook_context_merges_benchmark_extra() -> None:
     data = ctx.to_dict()
     assert data["webshop"]["search_queries"] == ["mug"]
     assert data["benchmark"] == "webshop"
-
-
-def test_merge_init_effects_deduplicates_skills() -> None:
-    merged = merge_init_effects(
-        [
-            HookEffect(kind="init", skills=("a", "b"), tool_hint="hint"),
-            HookEffect(kind="init", skills=("b", "c")),
-        ]
-    )
-    assert merged is not None
-    assert merged.skills == ("a", "b", "c")
-    assert merged.tool_hint == "hint"
-    assert merge_init_effects([]) is None
 
 
 def test_action_effect_kinds_constant() -> None:

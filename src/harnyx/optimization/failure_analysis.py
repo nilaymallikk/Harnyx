@@ -289,29 +289,6 @@ def compute_signals(trajectory: Trajectory) -> dict[str, Any]:
     return signals
 
 
-def case_signature(case: FailureCase) -> str:
-    """A coarse runtime signature used to cluster recurring failures.
-
-    Harnyx extension: grouping by observable failure shape (terminal status,
-    no-op/error presence, action-name mix) lets one packet cover diverse failure
-    modes instead of over-sampling a single repeated one.
-    """
-    signals = case.signals
-    names = ",".join(sorted((signals.get("action_name_counts") or {}).keys()))
-    no_op = "noop" if signals.get("no_op_observations", 0) else ""
-    errors = "err" if signals.get("errors", 0) else ""
-    repeated = "rep" if signals.get("repeated_action_values", 0) else ""
-    return "|".join(part for part in (case.status, no_op, errors, repeated, names) if part)
-
-
-def cluster_cases(cases: Sequence[FailureCase]) -> dict[str, list[str]]:
-    """Group failure cases by :func:`case_signature`."""
-    clusters: dict[str, list[str]] = {}
-    for case in cases:
-        clusters.setdefault(case_signature(case), []).append(case.task_id)
-    return {key: sorted(value) for key, value in sorted(clusters.items())}
-
-
 def select_cases(cases: Sequence[FailureCase], max_traces: int, strategy: str) -> list[FailureCase]:
     """Select which failures enter the packet (mirrors reference strategies)."""
     if max_traces <= 0 or len(cases) <= max_traces:
@@ -320,19 +297,6 @@ def select_cases(cases: Sequence[FailureCase], max_traces: int, strategy: str) -
         return sorted(cases, key=lambda case: (case.reward, case.task_id))[:max_traces]
     if strategy == "first":
         return list(cases[:max_traces])
-    if strategy == "clustered":
-        grouped: dict[str, list[FailureCase]] = {}
-        for case in cases:
-            grouped.setdefault(case_signature(case), []).append(case)
-        out: list[FailureCase] = []
-        while len(out) < max_traces and any(grouped.values()):
-            for key in sorted(grouped):
-                bucket = grouped[key]
-                if bucket:
-                    out.append(bucket.pop(0))
-                    if len(out) >= max_traces:
-                        break
-        return out
     if strategy == "round_robin":
         grouped: dict[str, list[FailureCase]] = {}
         for case in sorted(cases, key=lambda case: (case.task_id, case.reward)):
@@ -413,7 +377,6 @@ class TraceFailureAnalyzer:
 
         selected = select_cases(cases, self.max_traces, self.strategy)
         aggregate = self._aggregate_signals(selected)
-        clusters = cluster_cases(cases)
         return FailurePacket(
             benchmark=self.benchmark,
             batch_id=batch_id,
@@ -425,8 +388,6 @@ class TraceFailureAnalyzer:
             metadata={
                 "candidate_failures": len(cases),
                 "included": len(selected),
-                "clusters": clusters,
-                "num_clusters": len(clusters),
             },
         )
 

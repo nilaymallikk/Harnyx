@@ -9,16 +9,14 @@ endpoints (including OpenRouter, vLLM, SGLang, and local servers) use
 
 from __future__ import annotations
 
-from harnyx.llm.local import CallableProvider, ScriptedProvider
-from harnyx.llm.openai import OpenAICompatibleProvider, OpenRouterProvider
+from harnyx.llm.local import ScriptedProvider
+from harnyx.llm.openai import OpenAICompatibleProvider
 from harnyx.llm.provider import LLMProvider, LLMResponse, Message
 
 __all__ = [
-    "CallableProvider",
     "LLMProvider",
     "LLMResponse",
     "Message",
     "OpenAICompatibleProvider",
-    "OpenRouterProvider",
     "ScriptedProvider",
 ]

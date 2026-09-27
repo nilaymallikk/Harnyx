@@ -27,7 +27,7 @@ executes any environment action.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
@@ -252,18 +252,3 @@ class ExecutableHarness(BaseHarness):
             "hooks": list(self.hook_names),
             "is_noop": self.is_noop,
         }
-
-
-def merge_init_effects(effects: Sequence[HookEffect]) -> HookEffect | None:
-    """Merge ``on_init`` effects (skills union, first tool hint wins)."""
-    skills: list[str] = []
-    tool_hint = ""
-    for effect in effects:
-        if effect is None:
-            continue
-        skills.extend(effect.skills)
-        if not tool_hint and effect.tool_hint:
-            tool_hint = effect.tool_hint
-    if not skills and not tool_hint:
-        return None
-    return HookEffect(kind="init", skills=tuple(dict.fromkeys(skills)), tool_hint=tool_hint)

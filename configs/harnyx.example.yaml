@@ -32,8 +32,7 @@ optimization:
   selection_strategy: round_robin
   reward_threshold: 1.0
   smoke_test: false
-  patch_cache: true        # Harnyx extension
-  cluster_failures: false  # Harnyx extension
+  patch_cache: true
   accept_first_valid: false
 
 sandbox:

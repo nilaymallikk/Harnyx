@@ -107,8 +107,6 @@ Implemented and opt-in:
 
 - **Patch caching** (`OptimizationConfig.patch_cache`) — skips re-evaluating an
   identical patch on an identical packet.
-- **Failure clustering** (`cluster_failures` / `select_cases(..., "clustered")`)
-  — groups failures by runtime signature so a packet spans diverse failure modes.
 - **Regression suite** (`CandidateSelector(regression_suite=...)`) — an explicit
   set of previously solved tasks that must keep passing; complements the paper's
   non-regressive teacher filtering.

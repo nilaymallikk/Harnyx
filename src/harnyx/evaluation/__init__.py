@@ -1,4 +1,4 @@
-"""Evaluation, metrics, and run-directory observability."""
+"""Evaluation and run-directory observability."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from harnyx.evaluation.harness_r1 import (
     BenchmarkRunner,
     HarnessR1BenchmarkAdapter,
 )
-from harnyx.evaluation.metrics import aggregate_rewards, mean_reward, success_rate
 from harnyx.evaluation.reports import RunDirectory
 
 __all__ = [
@@ -20,7 +19,4 @@ __all__ = [
     "HarnessR1BenchmarkAdapter",
     "LocalEvaluator",
     "RunDirectory",
-    "aggregate_rewards",
-    "mean_reward",
-    "success_rate",
 ]

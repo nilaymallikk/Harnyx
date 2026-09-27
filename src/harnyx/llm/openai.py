@@ -115,26 +115,3 @@ class OpenAICompatibleProvider:
             usage=dict(data.get("usage", {}) or {}),
             raw=data if isinstance(data, dict) else {},
         )
-
-
-class OpenRouterProvider(OpenAICompatibleProvider):
-    """OpenRouter is treated strictly as an OpenAI-compatible endpoint."""
-
-    name = "openrouter"
-
-    def __init__(
-        self,
-        *,
-        model: str,
-        api_key: str | None = None,
-        base_url: str = "https://openrouter.ai/api/v1",
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(
-            base_url=base_url,
-            model=model,
-            api_key=api_key,
-            env_key="OPENROUTER_API_KEY",
-            provider_name="openrouter",
-            **kwargs,
-        )
