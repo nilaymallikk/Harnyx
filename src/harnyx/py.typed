@@ -1,0 +1,2 @@
+# Marker file for PEP 561. Consumers (mypy, pyright) read the inline type
+# annotations shipped with this package.

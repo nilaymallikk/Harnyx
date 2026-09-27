@@ -29,7 +29,7 @@ the harness is the editable object, not the model weights.
 Harnyx is an independent implementation of the method in
 **"Harness-R1: Learning to Edit Executable Runtime Harnesses from Agent Failure
 Trajectories"** (Shao et al., 2026). The paper/repository and Harnyx map
-component-by-component in [`docs/reproduction.md`](docs/reproduction.md).
+component-by-component in [`docs/reproduction.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/reproduction.md).
 
 - **Reproduced faithfully:** the four executable lifecycle hooks
   (`on_init`, `make_pre_hint`, `on_before_action`, `on_post_step`), the
@@ -40,9 +40,9 @@ component-by-component in [`docs/reproduction.md`](docs/reproduction.md).
 - **Deliberate deviations:** benchmark runtimes are not bundled (use an adapter);
   training delegates to TRL instead of vendoring Relax; only the released
   code-hook protocol is implemented (not the legacy six-action DSL). See
-  [`docs/reproduction.md`](docs/reproduction.md#intentional-deviations).
+  [`docs/reproduction.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/reproduction.md#intentional-deviations).
 - **Harnyx extensions (opt-in):** patch caching, failure clustering, and an
-  explicit regression suite. See [`docs/research.md`](docs/research.md).
+  explicit regression suite. See [`docs/research.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/research.md).
 
 Reference implementation: <https://github.com/DeepExperience/Harness-R1>
 (used for behavioural verification only; no source is copied).
@@ -127,13 +127,13 @@ result = optimizer.optimize(tasks)          # tasks: list[harnyx.Task]
 print(result.final.mean_reward - result.baseline.mean_reward)
 ```
 
-See [`docs/quickstart.md`](docs/quickstart.md) and
-[`docs/custom-agent.md`](docs/custom-agent.md).
+See [`docs/quickstart.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/quickstart.md) and
+[`docs/custom-agent.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/custom-agent.md).
 
 ## Nyvero example
 
 Nyvero is never a dependency of Harnyx core. The adapter targets a documented
-duck-typed contract (see [`docs/nyvero.md`](docs/nyvero.md)):
+duck-typed contract (see [`docs/nyvero.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/nyvero.md)):
 
 ```python
 from harnyx.adapters.nyvero import NyveroAgentAdapter, NyveroHarnessAdapter
@@ -157,7 +157,7 @@ python examples/reproduction/run_local_reproduction.py --run-root runs/reproduct
 ```
 
 The honest reproduction status — expected paper numbers vs what was actually
-observed on the available hardware — is in [`docs/research.md`](docs/research.md).
+observed on the available hardware — is in [`docs/research.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/research.md).
 No benchmark result in this repository is fabricated.
 
 To reproduce the paper protocol on real benchmark runtimes, point
@@ -179,7 +179,7 @@ generators, raise, and benchmark-answer leakage (e.g. numbered ALFWorld
 instances). Execution uses a restricted builtin set, a wall-clock timeout, and a
 line budget; runtime failures degrade to *no intervention*. `SubprocessSandbox`
 adds process isolation, a sanitized environment (no credentials), and
-`RLIMIT_AS`/`RLIMIT_CPU`. See [`docs/sandbox.md`](docs/sandbox.md).
+`RLIMIT_AS`/`RLIMIT_CPU`. See [`docs/sandbox.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/sandbox.md).
 
 No API key is ever hard-coded or logged; providers read them from environment
 variables.
@@ -220,6 +220,6 @@ It is deliberately *not* a core dependency of Harnyx.
 
 ## License
 
-Apache-2.0. Harnyx is an independent implementation; see [`NOTICE`](NOTICE) for
+Apache-2.0. Harnyx is an independent implementation; see [`NOTICE`](https://github.com/nilaymallikk/Harnyx/blob/main/NOTICE) for
 attribution of the Harness-R1 reference implementation, Life-Harness/AgentBench,
 Relax, and the benchmark environments.

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,18 +8,26 @@ version = "0.1.0"
 description = "Harnyx: learn to improve executable AI-agent harnesses from failure trajectories (a Harness-R1 implementation)."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Apache-2.0" }
-authors = [{ name = "Harnyx contributors" }]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Nilay Mallik" }]
 keywords = ["agents", "harness", "llm", "reinforcement-learning", "harness-r1"]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/nilaymallikk/Harnyx"
+Repository = "https://github.com/nilaymallikk/Harnyx"
+Issues = "https://github.com/nilaymallikk/Harnyx/issues"
+Documentation = "https://github.com/nilaymallikk/Harnyx/tree/main/docs"
 
 [project.optional-dependencies]
 yaml = ["PyYAML>=6.0"]
@@ -31,6 +39,9 @@ harnyx = "harnyx.cli.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+harnyx = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
