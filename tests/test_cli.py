@@ -61,3 +61,31 @@ def test_cli_help_exits_zero() -> None:
 
 def test_cli_optimize_toy(tmp_path) -> None:
     assert main(["optimize", "--run-dir", str(tmp_path), "--candidates", "2"]) == 0
+
+
+def test_cli_optimize_respects_config(tmp_path) -> None:
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "optimization": {"candidates": 2, "iterations": 2},
+                "run_dir": str(tmp_path / "runs"),
+                "sandbox": {"backend": "local"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    # The plugin supplies its own engineer, so no network is needed.
+    assert main(["optimize", "--config", str(config), "--plugin", "examples.plugins.verify_agent:build"]) == 0
+    run_dirs = list((tmp_path / "runs").glob("*"))
+    assert run_dirs
+    report = json.loads((run_dirs[0] / "report.json").read_text())
+    assert report["config"]["candidates"] == 2
+    assert len(report["iterations"]) == 2
+
+
+def test_cli_evaluate_respects_config(tmp_path, capsys) -> None:
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps({"evaluation": {"benchmark": "verify"}}), encoding="utf-8")
+    assert main(["evaluate", "--config", str(config), "--plugin", "examples.plugins.verify_agent:build"]) == 0
+    assert "benchmark=verify" in capsys.readouterr().out

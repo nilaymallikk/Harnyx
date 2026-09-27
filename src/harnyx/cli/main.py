@@ -23,17 +23,22 @@ import sys
 from collections.abc import Sequence
 from typing import Any
 
+from harnyx.config import HarnyxConfig, SandboxConfig, load_config
 from harnyx.core.result import EvaluationResult
 from harnyx.core.task import Task
 from harnyx.core.trajectory import Trajectory
 from harnyx.core.types import read_json, read_jsonl, write_json, write_jsonl
 from harnyx.engineering.harness_engineer import LLMHarnessEngineer
 from harnyx.engineering.patch import HarnessPatch
+from harnyx.engineering.validation import PatchValidator
 from harnyx.errors import HarnyxError
 from harnyx.evaluation.evaluator import LocalEvaluator
 from harnyx.llm.openai import OpenAICompatibleProvider
 from harnyx.optimization.failure_analysis import FailurePacket, TraceFailureAnalyzer
 from harnyx.optimization.optimizer import HarnessOptimizer, OptimizationConfig
+from harnyx.sandbox.isolation import SubprocessSandbox
+from harnyx.sandbox.limits import SandboxLimits
+from harnyx.sandbox.runner import LocalSandbox
 from harnyx.training.dataset import SFTDatasetBuilder, write_sft_dataset
 
 
@@ -70,7 +75,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     evaluate = sub.add_parser("evaluate", help="evaluate an agent (toy or plugin)")
     evaluate.add_argument("--plugin", help="module:factory returning {'agent','tasks',...}")
-    evaluate.add_argument("--benchmark", default="toy")
+    evaluate.add_argument("--config", help="Harnyx config JSON/YAML file")
+    evaluate.add_argument("--benchmark", default=None)
     evaluate.add_argument("--output", help="write the EvaluationResult JSON here")
     evaluate.set_defaults(handler=_cmd_evaluate)
 
@@ -79,10 +85,10 @@ def _build_parser() -> argparse.ArgumentParser:
     optimize.add_argument("--config", help="Harnyx config JSON/YAML file")
     optimize.add_argument("--base-url", help="OpenAI-compatible engineer endpoint")
     optimize.add_argument("--model", help="engineer model name")
-    optimize.add_argument("--api-key-env", default="HARNYX_ENGINEER_API_KEY")
-    optimize.add_argument("--candidates", type=int, default=8)
-    optimize.add_argument("--iterations", type=int, default=1)
-    optimize.add_argument("--run-dir", default="runs")
+    optimize.add_argument("--api-key-env", default=None)
+    optimize.add_argument("--candidates", type=int, default=None)
+    optimize.add_argument("--iterations", type=int, default=None)
+    optimize.add_argument("--run-dir", default=None)
     optimize.add_argument("--allow-regressions", action="store_true")
     optimize.set_defaults(handler=_cmd_optimize)
 
@@ -155,8 +161,11 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_evaluate(args: argparse.Namespace) -> int:
-    agent, tasks, benchmark = _resolve_agent_and_tasks(args.plugin, default_benchmark=args.benchmark)
-    result = LocalEvaluator(benchmark=benchmark).evaluate(agent, tasks)
+    config = _load_config_arg(args)
+    default_benchmark = args.benchmark or config.evaluation.benchmark or "toy"
+    agent, tasks, benchmark = _resolve_agent_and_tasks(args.plugin, default_benchmark=default_benchmark)
+    evaluator = LocalEvaluator(benchmark=benchmark, trajectory_dir=config.evaluation.trajectory_dir)
+    result = evaluator.evaluate(agent, tasks)
     _print_evaluation(result)
     if args.output:
         write_json(args.output, result.to_dict())
@@ -165,21 +174,41 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
 
 def _cmd_optimize(args: argparse.Namespace) -> int:
-    agent, tasks, benchmark = _resolve_agent_and_tasks(args.plugin, default_benchmark="toy")
-    engineer = _resolve_engineer(args, benchmark, plugin_spec=args.plugin)
-    config = OptimizationConfig(
-        candidates=args.candidates,
-        iterations=args.iterations,
-        allow_regressions=args.allow_regressions,
+    config = _load_config_arg(args)
+    default_benchmark = config.evaluation.benchmark or "toy"
+    agent, tasks, benchmark = _resolve_agent_and_tasks(args.plugin, default_benchmark=default_benchmark)
+    engineer = _build_engineer(args, benchmark, plugin_spec=args.plugin, config=config)
+    sandbox = _build_sandbox(config.sandbox)
+    validator = None
+    if config.optimization.smoke_test:
+        validator = PatchValidator(smoke_sandbox=SubprocessSandbox(sandbox.limits))
+    opt = config.optimization
+    opt_config = OptimizationConfig(
+        candidates=args.candidates if args.candidates is not None else opt.candidates,
+        iterations=args.iterations if args.iterations is not None else opt.iterations,
+        reward_metric=opt.reward_metric,
+        valid_bonus=opt.valid_bonus,
+        accept_threshold=opt.accept_threshold,
+        reject_regressions=opt.reject_regressions,
+        allow_regressions=args.allow_regressions or opt.allow_regressions,
+        max_traces=opt.max_traces,
+        selection_strategy=opt.selection_strategy,
+        reward_threshold=opt.reward_threshold,
+        smoke_test=opt.smoke_test,
+        patch_cache=opt.patch_cache,
+        accept_first_valid=opt.accept_first_valid,
+        cluster_failures=opt.cluster_failures,
     )
     optimizer = HarnessOptimizer(
         agent,
         engineer,
-        evaluator=LocalEvaluator(benchmark=benchmark),
+        evaluator=LocalEvaluator(benchmark=benchmark, trajectory_dir=config.evaluation.trajectory_dir),
+        sandbox=sandbox,
+        validator=validator,
         benchmark=benchmark,
-        model=getattr(args, "model", "") or "",
-        config=config,
-        run_dir=args.run_dir,
+        model=config.engineer.model or (args.model or ""),
+        config=opt_config,
+        run_dir=args.run_dir or config.run_dir,
     )
     result = optimizer.optimize(tasks)
     print("Harnyx optimize")
@@ -312,18 +341,55 @@ def _resolve_agent_and_tasks(plugin: str | None, *, default_benchmark: str) -> t
     return build_toy_agent(), build_toy_tasks(), "toy"
 
 
-def _resolve_engineer(args: argparse.Namespace, benchmark: str, *, plugin_spec: str | None) -> Any:
+def _load_config_arg(args: argparse.Namespace) -> HarnyxConfig:
+    path = getattr(args, "config", None)
+    return load_config(path) if path else HarnyxConfig()
+
+
+def _build_sandbox(config: SandboxConfig) -> LocalSandbox | SubprocessSandbox:
+    limits = SandboxLimits(
+        time_budget_s=config.hook_time_budget_ms / 1000.0,
+        line_budget=config.line_budget,
+        wall_timeout_s=config.wall_timeout_seconds,
+        memory_mb=config.memory_mb,
+        cpu_seconds=config.cpu_seconds,
+    )
+    if config.backend == "subprocess":
+        return SubprocessSandbox(limits)
+    return LocalSandbox(limits)
+
+
+def _build_engineer(
+    args: argparse.Namespace,
+    benchmark: str,
+    *,
+    plugin_spec: str | None,
+    config: HarnyxConfig,
+) -> Any:
     if plugin_spec:
         payload = _load_factory(plugin_spec)
         if isinstance(payload, dict) and payload.get("engineer") is not None:
             return payload["engineer"]
-    if getattr(args, "base_url", None) and getattr(args, "model", None):
+    engineer_cfg = config.engineer
+    base_url = getattr(args, "base_url", None) or engineer_cfg.base_url
+    model = getattr(args, "model", None) or engineer_cfg.model
+    if base_url and model:
         provider = OpenAICompatibleProvider(
-            base_url=args.base_url,
-            model=args.model,
-            env_key=getattr(args, "api_key_env", "HARNYX_ENGINEER_API_KEY"),
+            base_url=base_url,
+            model=model,
+            env_key=getattr(args, "api_key_env", None) or engineer_cfg.api_key_env,
+            default_temperature=engineer_cfg.temperature,
+            default_max_tokens=engineer_cfg.max_tokens,
         )
-        return LLMHarnessEngineer(provider, benchmark=benchmark)
+        return LLMHarnessEngineer(
+            provider,
+            benchmark=benchmark,
+            temperature=engineer_cfg.temperature,
+            max_tokens=engineer_cfg.max_tokens,
+            prefill_think=engineer_cfg.prefill_think,
+            require_think=engineer_cfg.require_think,
+            include_response_template=engineer_cfg.include_response_template,
+        )
     # Default to the deterministic scripted engineer for the toy benchmark.
     from harnyx.demo.toy import TOY_BENCHMARK, build_toy_patch_text
     from harnyx.engineering.harness_engineer import ScriptedHarnessEngineer
