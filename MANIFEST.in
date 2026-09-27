@@ -1,0 +1,4 @@
+# Source distribution extras. `research/` is intentionally excluded: it is not
+# part of the published package.
+graft examples
+graft docs

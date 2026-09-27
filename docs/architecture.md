@@ -10,10 +10,10 @@ depends on a specific model provider, benchmark, or training framework.
         ┌────────────────────────┼───────────────────────────────┐
         ▼                        ▼                                ▼
 ┌───────────────┐      ┌──────────────────┐            ┌──────────────────┐
-│ optimization/ │◄────►│   engineering/   │            │    training/     │
-│ optimizer     │      │ patch, validate, │            │ sft, grpo, data  │
-│ failure pkt   │      │ engineer, prompt │            │ (optional deps)  │
-│ reward, select│      └────────┬─────────┘            └──────────────────┘
+│ optimization/ │◄────►│   engineering/   │            │    adapters/     │
+│ optimizer     │      │ patch, validate, │            │ nyvero           │
+│ failure pkt   │      │ engineer, prompt │            └──────────────────┘
+│ reward, select│      └────────┬─────────┘
 └──────┬────────┘               │
        │                        ▼
        │                ┌───────────────┐
@@ -28,7 +28,7 @@ depends on a specific model provider, benchmark, or training framework.
         │                        │                                │
 ┌───────┴──────┐        ┌────────┴────────┐            ┌──────────┴───────┐
 │ evaluation/  │        │    adapters/    │            │      llm/        │
-│ Local, H-R1  │        │ generic, nyvero │            │ provider, openai │
+│ Local, H-R1  │        │     nyvero      │            │ provider, openai │
 └──────────────┘        └─────────────────┘            └──────────────────┘
 ```
 
@@ -42,18 +42,21 @@ depends on a specific model provider, benchmark, or training framework.
   runner (`runner.py`), the process-isolated runner (`isolation.py`), and
   budgets (`limits.py`).
 - **engineering** — the patch representation and parser (`patch.py`), static
-  validation (`validation.py`), engineers (`harness_engineer.py`,
-  `random_engineer.py`), and the prompt protocol (`prompt.py`).
+  validation (`validation.py`), and engineers (`harness_engineer.py`) and the
+  prompt protocol (`prompt.py`).
 - **optimization** — `FailurePacket` construction (`failure_analysis.py`),
   candidate generation (`patch_generation.py`), the outcome reward (`reward.py`),
   regression-aware selection (`selection.py`), and the loop (`optimizer.py`).
-- **evaluation** — `LocalEvaluator`, `HarnessR1BenchmarkAdapter`, metrics, and
+- **evaluation** — `LocalEvaluator`, `HarnessR1BenchmarkAdapter`, and
   `RunDirectory` for reproducible artifacts.
-- **adapters** — translate external agents/runtimes into Harnyx interfaces.
+- **adapters** — translate external agents/runtimes into Harnyx interfaces
+  (`nyvero.py`).
 - **llm** — provider protocol plus an OpenAI-compatible stdlib client.
-- **training** — SFT dataset/config and GRPO config/bridge, isolated from core.
-- **experiments** — ablation arms A–F.
 - **cli** — argparse front end; every command does real work.
+
+Research-only code (SFT/GRPO training, ablation arms, the random baseline
+engineer) lives in `research/` at the repository root. It depends on the
+installed package but is **not** part of the shipped wheel or sdist.
 
 ## The frozen/editable boundary
 

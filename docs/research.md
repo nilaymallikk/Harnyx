@@ -46,7 +46,7 @@ selection, real versioning (`harness-v1`), real run artifacts.
 
 ## 3. Ablations (local, deterministic)
 
-`harnyx.experiments.ablations` implements arms A–F. On the toy benchmark:
+`research.experiments.ablations` implements arms A–F. On the toy benchmark:
 
 | Key | Arm | Toy reward |
 |---|---|---|

@@ -68,12 +68,12 @@ Requires **Python ≥ 3.11**. Core has **zero runtime dependencies**.
 ```bash
 # Install for development
 pip install -e ".[dev]"        # adds pytest, ruff, mypy, PyYAML
-pip install -e ".[train]"      # adds trl/transformers/datasets/torch (SFT/GRPO)
 pip install -e ".[yaml]"       # YAML configs only
 
 # Test / lint / type-check (run before every commit)
-pytest -q                      # 113 tests, all deterministic, no network/GPU
-ruff check src tests examples
+pytest -q                      # 103 tests, all deterministic, no network/GPU
+pytest research -q             # research/training + ablation tests
+ruff check src tests research examples
 mypy                           # config in pyproject.toml
 
 # Run the deterministic end-to-end demo (no model, no GPU)
@@ -92,18 +92,17 @@ offline and fast.
 src/harnyx/
 ├── core/          Task, Trajectory, Agent/HarnessedAgent, Harness hook contract, Result
 ├── sandbox/       policy.py (AST), runner.py (LocalSandbox), isolation.py (SubprocessSandbox), limits.py
-├── engineering/   patch.py, validation.py, harness_engineer.py, random_engineer.py, prompt.py
+├── engineering/   patch.py, validation.py, harness_engineer.py, prompt.py
 ├── optimization/  failure_analysis.py, patch_generation.py, reward.py, selection.py, optimizer.py
-├── evaluation/    evaluator.py, harness_r1.py (benchmark adapter), metrics.py, reports.py
-├── adapters/      generic.py, nyvero.py
+├── evaluation/    evaluator.py, harness_r1.py (benchmark adapter), reports.py
+├── adapters/      nyvero.py
 ├── llm/           provider.py, openai.py, local.py
-├── training/      dataset.py, sft.py, grpo.py
-├── experiments/   ablations.py (A-F)
 ├── demo/          toy.py (deterministic end-to-end)
 └── cli/           main.py
-tests/             15 files, mirror the modules above
+tests/             13 files, mirror the shipped modules
 docs/              required reading: reproduction.md, research.md, sandbox.md, architecture.md
 examples/          plugins/ (CLI plugin), patches/, reproduction/
+research/          NOT shipped: training/, experiments/, random_engineer.py, tests/
 configs/           harnyx.example.yaml
 ```
 
@@ -143,8 +142,9 @@ extensions as such in `docs/research.md`.
 meaningful exit code; add a test in `tests/test_cli.py`. Do not add commands
 that only print.
 
-**Add a training feature** → `training/`. Lazy-import heavy frameworks and raise
-`ConfigError` with an actionable message when the extra is missing.
+**Add a training feature** → `research/training/`. This code is not shipped in
+the package; lazy-import heavy frameworks and raise `ConfigError` with an
+actionable message when the extra is missing.
 
 ## 7. Testing requirements
 

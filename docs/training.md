@@ -1,7 +1,11 @@
 # Training
 
+> This module lives in `research/training/` at the repository root and is **not**
+> part of the published `harnyx` package. It is kept out of the wheel because it
+> pulls optional heavy dependencies (`trl`, `transformers`, `datasets`, `torch`).
+
 Training is deliberately separated from the core runtime. You can use a
-pretrained engineer without importing `harnyx.training`.
+pretrained engineer without importing `research.training`.
 
 The paper trains in two stages while the target agent stays frozen:
 
@@ -17,7 +21,7 @@ block followed by exactly one `<patch>` JSON object — matching the released
 `prefill_think_patch` protocol.
 
 ```python
-from harnyx.training.dataset import SFTDatasetBuilder, write_sft_dataset
+from research.training.dataset import SFTDatasetBuilder, write_sft_dataset
 
 examples = SFTDatasetBuilder().build([(packet, patch), ...])
 write_sft_dataset(examples, "data/engineer_sft.jsonl")
@@ -26,12 +30,13 @@ write_sft_dataset(examples, "data/engineer_sft.jsonl")
 Teacher filtering keeps only executable, complete, non-negative-reward edits:
 
 ```python
-from harnyx.training.dataset import filter_training_records
+from research.training.dataset import filter_training_records
 records = [(packet, patch, {"valid": True, "reward": 0.5}), ...]
 kept = filter_training_records(records, min_reward=0.0)
 ```
 
-The `harnyx build-sft-data` CLI performs the same with JSONL inputs.
+`SFTDatasetBuilder.build` performs the same given `(failure_packet, patch)`
+pairs.
 
 ## Cold-start SFT (paper App. B.1)
 
@@ -50,7 +55,7 @@ The `harnyx build-sft-data` CLI performs the same with JSONL inputs.
 | Seed | 42 |
 
 ```python
-from harnyx.training.sft import SFTConfig, train_sft
+from research.training.sft import SFTConfig, train_sft
 
 train_sft(SFTConfig(dataset_path="data/engineer_sft.jsonl", base_model="Qwen3.5-9B"))
 ```
@@ -77,7 +82,7 @@ Reward = full-batch mean reward change `Δ_B(P)`; invalid, no-op, or incomplete
 patches score 0. There is no validity bonus and no learned judge.
 
 ```python
-from harnyx.training.grpo import GRPOConfig, HarnessPatchReward, train_grpo
+from research.training.grpo import GRPOConfig, HarnessPatchReward, train_grpo
 
 reward = HarnessPatchReward(evaluate_patch)   # your sandbox+rerun adapter
 train_grpo(GRPOConfig(dataset_path="data/engineer_rl.jsonl"), reward_fn=reward)
@@ -91,7 +96,8 @@ frozen target on the same task batch.
 The reference implementation trains with the authors' **Relax** (GRPO) and
 **LLaMA-Factory** (SFT). Harnyx preserves the hyperparameters and the algorithm
 interface, and delegates the optimizer step to **TRL** (`SFTTrainer`,
-`GRPOTrainer`). Install with `pip install harnyx[train]` to enable these
+`GRPOTrainer`). Install the training stack with
+`pip install trl transformers datasets torch` to enable these
 launchers; otherwise they raise an explicit `ConfigError` rather than pretending
 to train.
 

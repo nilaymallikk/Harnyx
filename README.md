@@ -55,14 +55,16 @@ harnyx/
 ├── engineering/   HarnessPatch, parser, PatchValidator, HarnessEngineer, prompts
 ├── sandbox/       AST policy, LocalSandbox, SubprocessSandbox, limits
 ├── optimization/  FailurePacket, PatchGenerator, OutcomeReward, selection, optimizer
-├── evaluation/    LocalEvaluator, HarnessR1BenchmarkAdapter, metrics, run reports
-├── adapters/      Generic adapters + Nyvero adapter (no Nyvero dependency)
+├── evaluation/    LocalEvaluator, HarnessR1BenchmarkAdapter, run reports
+├── adapters/      Nyvero adapter (no Nyvero dependency)
 ├── llm/           Provider protocol, OpenAI-compatible client, scripted provider
-├── training/      SFT dataset/config, GRPO config + TRL bridge
-├── experiments/   A–F ablation harness
 ├── demo/          Deterministic toy end-to-end
 └── cli/           harnyx <command>
 ```
+
+Research-only code (SFT/GRPO training, ablations, the random baseline engineer)
+lives in `research/` at the repository root and is **not** part of the
+installed package.
 
 The hard boundary: **frozen policy** (never edited) vs **editable harness**
 (only four hooks, only structured effects). A hook never executes an environment
@@ -73,7 +75,6 @@ action itself; the host runtime interprets its return value.
 ```bash
 pip install -e .            # core, no dependencies
 pip install -e ".[yaml]"    # + YAML configs
-pip install -e ".[train]"   # + trl/transformers/datasets for SFT & GRPO
 pip install -e ".[dev]"     # + pytest/ruff/mypy
 ```
 
@@ -151,7 +152,6 @@ harnyx run
 
 # Full local reproduction: toy loop + A-F ablations + security smoke
 python examples/reproduction/run_local_reproduction.py --run-root runs/reproduction
-
 # Full paper reproduction (WebShop/ALFWorld/DBBench) is documented, not runnable
 # here because benchmark assets, Qwen3.5 models, and 8xH800 are unavailable.
 ```

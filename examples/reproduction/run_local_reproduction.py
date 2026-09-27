@@ -24,11 +24,13 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-if str(REPO / "src") not in sys.path:
-    sys.path.insert(0, str(REPO / "src"))
+for candidate in (str(REPO / "src"), str(REPO)):
+    if candidate not in sys.path:
+        sys.path.insert(0, candidate)
+
+from research.experiments.ablations import ABLATIONS, run_all_ablations  # noqa: E402
 
 from harnyx.demo.toy import TOY_BENCHMARK, build_toy_agent, build_toy_tasks, run_demo  # noqa: E402
-from harnyx.experiments.ablations import ABLATIONS, run_all_ablations  # noqa: E402
 from harnyx.sandbox.runner import LocalSandbox  # noqa: E402
 
 

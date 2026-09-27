@@ -86,7 +86,7 @@ harnyx inspect-trajectory runs/<timestamp>/... --task-id task-3
 
 ```python
 from harnyx.demo.toy import build_toy_agent, build_toy_tasks
-from harnyx.experiments.ablations import run_all_ablations
+from research.experiments.ablations import run_all_ablations
 
 for r in run_all_ablations(build_toy_agent(), build_toy_tasks(), benchmark="toy", run_root="runs/ablations"):
     print(r.key, r.name, f"{r.reward:+.3f}")

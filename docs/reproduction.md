@@ -33,7 +33,7 @@ methodology is changed silently. Deviations are called out below.
 | 18 | WebShop shaped reward; ALFWorld/DBBench binary | App. B.4 | per-benchmark reward modules | `OutcomeReward` over arbitrary `EvaluationResult.rewards` | reproduced (generic) |
 | 19 | `K = 8` candidates per packet | §3.2, App. B.2 | GRPO `num_generations=8` | `OptimizationConfig.candidates=8` | reproduced (configurable) |
 | 20 | Outcome-grounded selection | §3.2 Alg. 1 | reward-gated GRPO | `CandidateSelector` best-reward | reproduced |
-| 21 | Group-relative advantage `Â_k` | §3.2 Eq. 3 | Relax GRPO | documented in `harnyx.training.grpo`; TRL adapter | interface reproduced |
+| 21 | Group-relative advantage `Â_k` | §3.2 Eq. 3 | Relax GRPO | documented in `research.training.grpo`; TRL adapter | interface reproduced |
 | 22 | Clipped surrogate + truncated importance weights | §3.2 Eq. 4 | Relax GRPO; configs | `GRPOConfig` clip 0.20/0.28, TIS weight 2.0 | hyperparameters reproduced |
 | 23 | Cold-start SFT objective | §3.2 Eq. 2 | `configs/sft/...`, LLaMA-Factory | `SFTConfig` + `train_sft` (TRL) | interface + data reproduced |
 | 24 | Teacher filtering (executable, complete, non-negative reward) | App. B.1 | reward-cache filtering | `filter_training_records` | reproduced |
@@ -41,7 +41,7 @@ methodology is changed silently. Deviations are called out below.
 | 26 | `prefill_think_patch` response protocol | App. A.3 | `extract_prefilled_think_patch_json_object` | `extract_patch(prefill_think=True)` | reproduced |
 | 27 | Data splits | App. D | benchmark-specific manifests | caller-supplied `Task` batches | not bundled |
 | 28 | WebShop / ALFWorld / DBBench runtimes | §4.1 | `life-harness` task runtimes | external via `HarnessR1BenchmarkAdapter` | **deviation** (not bundled) |
-| 29 | Lifecycle-position ablation | §4.5 | heldout/lifecycle scripts | `harnyx.experiments.ablations` | reproduced (local) |
+| 29 | Lifecycle-position ablation | §4.5 | heldout/lifecycle scripts | `research.experiments.ablations` | reproduced (local) |
 | 30 | Legacy typed DSL (`set_config`, skills, guard/recovery rules) | App. A.2 (code-hook-only release) | `harness_r1_patch.py` supports 6 action types | **not implemented** | **deviation** (paper's active protocol is code-hook-only) |
 
 ## Intentional deviations
