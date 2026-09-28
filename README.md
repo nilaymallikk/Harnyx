@@ -22,6 +22,33 @@ target agent rollout
 Harnyx is not an agent framework. It is the *optimization loop around* an agent:
 the harness is the editable object, not the model weights.
 
+## Why you'd use it
+
+Your agent's model is frozen — an API, or a self-hosted checkpoint you are not
+going to fine-tune — but it still fails in recurring, systematic ways: wrong
+tool arguments, dropped state, protocol violations, repeated actions, no
+recovery after an error. Today you patch that by hand (prompts, guards, retry
+logic) with no evidence it actually helps.
+
+Harnyx automates that loop:
+
+- **It edits the runtime, not the model.** The editable surface is four
+  lifecycle hooks around your frozen policy: initialize context, hint before a
+  decision, validate/rewrite/veto an action before it runs, recover after
+  feedback.
+- **An engineer model writes the edits** from your own failure traces, so the
+  fix targets the failures you actually have instead of a generic prompt.
+- **Every edit is measured, not judged.** Harnyx reruns the *same* tasks with and
+  without the patch and keeps it only if task success/reward improves.
+- **It refuses to make things worse.** A patch that breaks a previously solved
+  task is rejected (regression protection); every accepted patch is versioned
+  and reversible.
+- **You get a tiny artifact to load at runtime.** The output is a validated
+  code-hook patch (`harness-vN`) you ship alongside your agent.
+
+Use it when you can measure task outcomes and want your agent's success rate to
+improve automatically, without training the model.
+
 ![Harnyx architecture](https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/architecture.png)
 
 ---
@@ -82,66 +109,101 @@ The hard boundary: **frozen policy** (never edited) vs **editable harness**
 (only four hooks, only structured effects). A hook never executes an environment
 action itself; the host runtime interprets its return value.
 
-## Installation
+## Install
 
 ```bash
-pip install -e .            # core, no dependencies
-pip install -e ".[yaml]"    # + YAML configs
-pip install -e ".[dev]"     # + pytest/ruff/mypy
+pip install harnyx        # or: uv add harnyx
 ```
 
-Requires Python ≥ 3.11. Core has **zero runtime dependencies**.
+Requires Python ≥ 3.11. The core library has **zero runtime dependencies**.
+Optional extra: `harnyx[yaml]` for YAML config files.
 
-## Minimal example
+## Verify the install (self-test, no model needed)
 
-The deterministic toy demo needs no model, GPU, or benchmark assets:
+This is a deterministic offline self-test that proves the whole pipeline works
+(parse → validate → sandbox → rerun → reward → version). It is **not** how you
+use the library in your app.
 
 ```bash
 harnyx run
-# baseline success 0/1, patched success 1/1, engineer reward +1.000
+# baseline success 0/1  ->  patched success 1/1, engineer reward +1.000, harness-v1
 ```
 
-Or in Python:
+## Use it in your agent
+
+You provide three things: your **environment**, your **policy**, and a **task
+batch**. Harnyx supplies the harness, the engineer loop, the sandbox, the
+outcome reward, and selection.
 
 ```python
-from harnyx.demo.toy import run_demo
-
-print(run_demo("runs", candidates=3))
-
-from harnyx import (
-    ExecutableHarness, FailurePacket, LocalEvaluator, LocalSandbox,
-    ScriptedHarnessEngineer, HarnessOptimizer,
-)
-```
-
-A full optimization over your own agent:
-
-```python
+from harnyx import Action, StepResult, Task, HarnessedAgent
 from harnyx import HarnessOptimizer, LocalEvaluator, LLMHarnessEngineer
 from harnyx.llm.openai import OpenAICompatibleProvider
 from harnyx.optimization.optimizer import OptimizationConfig
 
-provider = OpenAICompatibleProvider(
-    base_url="http://localhost:8000/v1",  # OpenAI / OpenRouter / vLLM / SGLang
-    model="Qwen3.5-9B-engineer",
-    env_key="HARNYX_ENGINEER_API_KEY",
-)
-engineer = LLMHarnessEngineer(provider, benchmark="mybench")
+class MyEnv:
+    """Runs one task and reports an objective outcome."""
+    name = "support"
+    def reset(self, task: Task) -> str: ...          # -> initial observation
+    def step(self, action: Action) -> StepResult: ... # -> next observation (+done)
+    def state(self) -> dict: ...                      # exposed to hooks as ctx["state"]
+    def predicates(self) -> dict: ...                 # exposed as ctx["predicates"]
+    def success(self) -> bool: ...                    # your success criterion
+    def episode_reward(self) -> float: ...            # 0/1, or a shaped score
+    def admissible_actions(self) -> list[str]: ...
 
-optimizer = HarnessOptimizer(
-    agent,                       # any object with .run(task, harness, recorder)
+class MyPolicy:
+    """Your frozen LLM. It only decides; it never edits the harness."""
+    name = "my-policy"
+    def act(self, messages, *, step, admissible) -> Action:
+        # call your model here and return Action(name=..., arguments=...)
+        ...
+
+agent = HarnessedAgent(MyPolicy(), MyEnv(), benchmark="support", max_steps=12)
+
+# The engineer is an LLM that reads failure traces and writes harness patches.
+engineer = LLMHarnessEngineer(
+    OpenAICompatibleProvider(
+        base_url="http://localhost:8000/v1",   # OpenAI / OpenRouter / vLLM / SGLang
+        model="your-engineer-model",
+        env_key="HARNYX_ENGINEER_API_KEY",
+    ),
+    benchmark="support",
+)
+
+# Mine failures -> propose patches -> rerun the same tasks -> keep what improves.
+result = HarnessOptimizer(
+    agent,
     engineer,
-    evaluator=LocalEvaluator(benchmark="mybench"),
-    benchmark="mybench",
+    evaluator=LocalEvaluator(benchmark="support"),
+    benchmark="support",
     config=OptimizationConfig(candidates=8, iterations=3),
     run_dir="runs",
-)
-result = optimizer.optimize(tasks)          # tasks: list[harnyx.Task]
-print(result.final.mean_reward - result.baseline.mean_reward)
+).optimize(tasks)          # tasks: list[Task] with stable .id values
+
+print(result.baseline.mean_reward, "->", result.final.mean_reward)
 ```
 
-See [`docs/quickstart.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/quickstart.md) and
+Already have an agent loop? Wrap it instead of using `HarnessedAgent`: call
+`harness.on_init`, `make_pre_hint`, `on_before_action`, and `on_post_step` at
+your lifecycle points. See
 [`docs/custom-agent.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/custom-agent.md).
+
+## Ship an accepted patch
+
+The optimizer writes `runs/<timestamp>/accepted_patch.json` and a versioned
+harness. Load the patch into your production agent — no model change, and the
+patch is inert until you choose to install it:
+
+```python
+import json
+from harnyx import ExecutableHarness, LocalSandbox, HarnessPatch
+
+raw = json.load(open("runs/<timestamp>/accepted_patch.json"))["patch"]
+patch = HarnessPatch.from_dict(raw)
+harness = ExecutableHarness.from_patch(patch, sandbox=LocalSandbox())
+outcome = agent.run(task, harness=harness)   # your agent, now guarded
+```
 
 ## Nyvero example
 
