@@ -53,6 +53,12 @@ def test_cli_no_command_returns_usage() -> None:
     assert main([]) == 2
 
 
+def test_python_m_harnyx_entrypoint_exists() -> None:
+    import harnyx.__main__ as entry
+
+    assert callable(entry.main)
+
+
 def test_cli_help_exits_zero() -> None:
     with pytest.raises(SystemExit) as exc:
         main(["--help"])

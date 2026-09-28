@@ -22,6 +22,18 @@ target agent rollout
 Harnyx is not an agent framework. It is the *optimization loop around* an agent:
 the harness is the editable object, not the model weights.
 
+![Harnyx architecture](https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/architecture.png)
+
+---
+
+## Demo
+
+![Harnyx CLI demo](https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/demo.gif)
+
+Recorded on this repository's deterministic toy benchmark: baseline reward `0.0`
+-> patched reward `1.0`, accepting `harness-v1` (no model, GPU, or benchmark
+assets required). Video: [`assets/demo.mp4`](https://github.com/nilaymallikk/Harnyx/blob/main/assets/demo.mp4).
+
 ---
 
 ## Relationship to Harness-R1

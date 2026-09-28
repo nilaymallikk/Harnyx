@@ -341,3 +341,7 @@ def _print_evaluation(result: EvaluationResult) -> None:
           f"({result.num_success}/{result.n})")
     if result.errors:
         print(f"  errors: {json.dumps(result.errors, sort_keys=True)}")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
