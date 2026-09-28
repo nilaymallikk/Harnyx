@@ -1,5 +1,8 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/logo.png" alt="Harnyx" width="460">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/logo.png">
+    <img alt="Harnyx" src="https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/logo-light.png" width="460">
+  </picture>
 </div>
 
 **Learn to improve executable AI-agent harnesses from failure trajectories.**
@@ -27,8 +30,8 @@ the harness is the editable object, not the model weights.
 
 ## Why you'd use it
 
-Your agent's model is frozen — an API, or a self-hosted checkpoint you are not
-going to fine-tune — but it still fails in recurring, systematic ways: wrong
+Your agent's model is frozen (an API, or a self-hosted checkpoint you are not
+going to fine-tune), but it still fails in recurring, systematic ways: wrong
 tool arguments, dropped state, protocol violations, repeated actions, no
 recovery after an error. Today you patch that by hand (prompts, guards, retry
 logic) with no evidence it actually helps.
@@ -52,7 +55,30 @@ Harnyx automates that loop:
 Use it when you can measure task outcomes and want your agent's success rate to
 improve automatically, without training the model.
 
+## Architecture
+
 ![Harnyx architecture](https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/architecture.png)
+
+```text
+harnyx/
+├── core/          Task, Trajectory, Agent, Harness (hook contract), Result
+├── engineering/   HarnessPatch, parser, PatchValidator, HarnessEngineer, prompts
+├── sandbox/       AST policy, LocalSandbox, SubprocessSandbox, limits
+├── optimization/  FailurePacket, PatchGenerator, OutcomeReward, selection, optimizer
+├── evaluation/    LocalEvaluator, HarnessR1BenchmarkAdapter, run reports
+├── adapters/      Nyvero adapter (no Nyvero dependency)
+├── llm/           Provider protocol, OpenAI-compatible client, scripted provider
+├── demo/          Deterministic toy end-to-end
+└── cli/           harnyx <command>
+```
+
+Research-only code (SFT/GRPO training, ablations, the random baseline engineer)
+lives in `research/` at the repository root and is **not** part of the
+installed package.
+
+The hard boundary: **frozen policy** (never edited) vs **editable harness**
+(only four hooks, only structured effects). A hook never executes an environment
+action itself; the host runtime interprets its return value.
 
 ## What it actually does (a concrete example)
 
@@ -83,15 +109,36 @@ agent.run(task, harness=harness)
 
 No model change, no new prompt framework - one reviewed, reversible code hook.
 
----
+## Use cases
 
-## Demo
+Any agent with an objective success signal can be optimized this way. Concrete
+places people apply it:
 
-![Harnyx CLI demo](https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/demo.gif)
+- **Coding agents.** Stop `rm -rf` outside the workspace, run the tests before
+  editing, and recover when a patch fails (`examples/nyvero/`).
+- **Customer support / CRM.** Block a refund until the order is verified,
+  escalate after repeated failures, avoid duplicate tickets.
+- **SQL and analytics.** Inspect the schema before querying, refuse destructive
+  DDL, retry a broken query with the database error text in context.
+- **RAG and research.** Retrieve before answering, cite what was read, recover
+  from an empty retrieval instead of answering anyway.
+- **Browser automation.** Select required options before submitting, avoid
+  repeated clicks, recover from a stalled page.
+- **DevOps and SRE.** Require a health check before redeploy, back off after
+  repeated failures, block destructive shell commands.
+- **Data pipelines / ETL.** Validate the schema before writing, avoid duplicate
+  loads, retry with backoff.
+- **IT and helpdesk automation.** Do not close a ticket before the resolution is
+  confirmed, and recover from a failed tool call.
+- **Game and embodied agents.** Stop repeating no-op actions and track
+  multi-step state such as find, take, transform, place.
+- **Multi-tool workflows.** Enforce tool ordering, block protocol violations,
+  and add recovery when a tool errors.
+- **Evaluation teams.** Compare harness variants against a fixed model with a
+  measured metric, without retraining anything.
 
-Recorded on this repository's deterministic toy benchmark: baseline reward `0.0`
--> patched reward `1.0`, accepting `harness-v1` (no model, GPU, or benchmark
-assets required). Video: [`assets/demo.mp4`](https://github.com/nilaymallikk/Harnyx/blob/main/assets/demo.mp4).
+If you can write "done means this command exits 0" (or any objective score),
+Harnyx can improve against it.
 
 ---
 
@@ -117,29 +164,6 @@ component-by-component in [`docs/reproduction.md`](https://github.com/nilaymalli
 
 Reference implementation: <https://github.com/DeepExperience/Harness-R1>
 (used for behavioural verification only; no source is copied).
-
-## Architecture
-
-```text
-harnyx/
-├── core/          Task, Trajectory, Agent, Harness (hook contract), Result
-├── engineering/   HarnessPatch, parser, PatchValidator, HarnessEngineer, prompts
-├── sandbox/       AST policy, LocalSandbox, SubprocessSandbox, limits
-├── optimization/  FailurePacket, PatchGenerator, OutcomeReward, selection, optimizer
-├── evaluation/    LocalEvaluator, HarnessR1BenchmarkAdapter, run reports
-├── adapters/      Nyvero adapter (no Nyvero dependency)
-├── llm/           Provider protocol, OpenAI-compatible client, scripted provider
-├── demo/          Deterministic toy end-to-end
-└── cli/           harnyx <command>
-```
-
-Research-only code (SFT/GRPO training, ablations, the random baseline engineer)
-lives in `research/` at the repository root and is **not** part of the
-installed package.
-
-The hard boundary: **frozen policy** (never edited) vs **editable harness**
-(only four hooks, only structured effects). A hook never executes an environment
-action itself; the host runtime interprets its return value.
 
 ## Install
 
@@ -224,7 +248,7 @@ your lifecycle points. See
 ## Ship an accepted patch
 
 The optimizer writes `runs/<timestamp>/accepted_patch.json` and a versioned
-harness. Load the patch into your production agent — no model change, and the
+harness. Load the patch into your production agent. No model change, and the
 patch is inert until you choose to install it:
 
 ```python
@@ -249,19 +273,6 @@ outcome = agent.run(task, harness=harness)   # your agent, now guarded
 - **Integration cost.** You must implement an `Environment` (and usually a
   tool-calling `Policy`) for your domain.
 
-## Nyvero example
-
-Nyvero is never a dependency of Harnyx core. The adapter targets a documented
-duck-typed contract (see [`docs/nyvero.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/nyvero.md)):
-
-```python
-from harnyx.adapters.nyvero import NyveroAgentAdapter, NyveroHarnessAdapter
-
-harnyx_agent = NyveroAgentAdapter(nyvero_agent, benchmark="nyvero")
-harnyx_harness = NyveroHarnessAdapter(nyvero_harness)  # expose Nyvero's harness
-result = harnyx_agent.run(task, harness=harnyx_harness)
-```
-
 ## Reproduction instructions
 
 ```bash
@@ -274,8 +285,8 @@ python examples/reproduction/run_local_reproduction.py --run-root runs/reproduct
 # here because benchmark assets, Qwen3.5 models, and 8xH800 are unavailable.
 ```
 
-The honest reproduction status — expected paper numbers vs what was actually
-observed on the available hardware — is in [`docs/research.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/research.md).
+The honest reproduction status (expected paper numbers vs what was actually
+observed on the available hardware) is in [`docs/research.md`](https://github.com/nilaymallikk/Harnyx/blob/main/docs/research.md).
 No benchmark result in this repository is fabricated.
 
 To reproduce the paper protocol on real benchmark runtimes, point

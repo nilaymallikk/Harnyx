@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="340" viewBox="0 0 1000 340">
+  <circle cx="150" cy="170" r="104" fill="none" stroke="#111111" stroke-width="16"/>
+  <circle cx="150" cy="66" r="11" fill="#111111"/><circle cx="254" cy="170" r="11" fill="#111111"/><circle cx="150" cy="274" r="11" fill="#111111"/><circle cx="46" cy="170" r="11" fill="#111111"/>
+  <rect x="110" y="124" width="18" height="92" rx="4" fill="#111111"/>
+  <rect x="172" y="124" width="18" height="92" rx="4" fill="#111111"/>
+  <rect x="110" y="161" width="80" height="18" rx="4" fill="#111111"/>
+  <text x="300" y="180" fill="#111111" font-family="DejaVu Sans, Arial, sans-serif" font-weight="bold"
+        font-size="120" letter-spacing="16">HARNYX</text>
+  <text x="304" y="240" fill="#6b7280" font-family="DejaVu Sans, Arial, sans-serif"
+        font-size="30" letter-spacing="1">harness optimization loop</text>
+</svg>
