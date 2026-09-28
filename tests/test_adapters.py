@@ -1,101 +1,133 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from harnyx.adapters.nyvero import (
     NyveroAgentAdapter,
-    NyveroHarnessAdapter,
+    NyveroBackend,
     build_hook_bridge,
+    default_effect_applier,
+    per_task_check,
+    workspace_check,
 )
-from harnyx.core.harness import ExecutableHarness, HookContext
+from harnyx.core.agent import Action
+from harnyx.core.harness import ExecutableHarness
 from harnyx.core.task import Task
-from harnyx.demo.toy import TOY_BENCHMARK, build_toy_patch_text
-from harnyx.engineering.patch import extract_patch
+from harnyx.engineering.patch import CodeHook, HarnessPatch
 from harnyx.sandbox.runner import LocalSandbox
 
 
-@dataclass
-class FakeNyveroStep:
-    observation: str
-    action: str = ""
-    tool_result: str | None = None
-    error: str | None = None
-    state: dict[str, Any] = field(default_factory=dict)
+def make_backend(script: list[dict[str, Any]], executed: list[tuple[str, dict]]) -> NyveroBackend:
+    def call_model(messages, tools):  # noqa: ANN001
+        return script.pop(0) if script else {"content": "done", "tool_calls": []}
+
+    def execute_tool(name: str, arguments: dict) -> str:
+        executed.append((name, arguments))
+        return f"{name} ok"
+
+    return NyveroBackend(
+        call_model=call_model,
+        execute_tool=execute_tool,
+        tools=[{"type": "function", "function": {"name": "bash"}}],
+        system_prompt="sys",
+    )
 
 
-@dataclass
-class FakeNyveroRollout:
-    success: bool
-    reward: float
-    steps: list[FakeNyveroStep]
-    status: str = "completed"
+def _adapter(script, executed, **kwargs):
+    return NyveroAgentAdapter(make_backend(script, executed), benchmark="nyvero", **kwargs)
 
 
-class FakeNyveroAgent:
-    name = "fake-nyvero"
-
-    def rollout(self, instruction: str, *, hooks=None, **kwargs: Any) -> FakeNyveroRollout:
-        assert hooks is not None
-        assert set(hooks) == {"on_init", "make_pre_hint", "on_before_action", "on_post_step"}
-        # The bridge must expose Harnyx harness effects as raw mappings.
-        _ = hooks["on_before_action"](
-            {
-                "benchmark": "toy",
-                "state": {"verified": False},
-                "action": {"name": "submit"},
-                "admissible": ["submit", "check"],
-            }
-        )
-        return FakeNyveroRollout(
-            success=True,
-            reward=1.0,
-            steps=[FakeNyveroStep(observation="verified", action="check")],
-        )
-
-
-class FakeNyveroHarness:
-    def on_before_action(self, context: dict[str, Any]) -> dict[str, Any] | None:
-        if context["state"].get("verified"):
-            return None
-        return {"kind": "block_and_prompt", "message": "Verify first."}
-
-
-def test_hook_bridge_returns_all_four_callables() -> None:
-    bridge = build_hook_bridge(None)
-    assert set(bridge) == {"on_init", "make_pre_hint", "on_before_action", "on_post_step"}
-    assert bridge["on_before_action"]({"state": {}, "action": {}}) is None
-
-
-def test_nyvero_harness_adapter_normalizes_effects() -> None:
-    adapter = NyveroHarnessAdapter(FakeNyveroHarness())
-    assert adapter.is_noop is False
-    ctx = HookContext(benchmark="toy", state={"verified": False}, action={"name": "submit"})
-    effect = adapter.on_before_action(ctx, {})
-    assert effect is not None
-    assert effect.kind == "block_and_prompt"
-    assert effect.message == "Verify first."
-    ctx.state["verified"] = True
-    assert adapter.on_before_action(ctx, {}) is None
-
-
-def test_nyvero_agent_adapter_translates_rollout() -> None:
-    patch = extract_patch(build_toy_patch_text(), benchmark=TOY_BENCHMARK, require_think=True, prefill_think=True)
-    harness = ExecutableHarness.from_patch(patch, sandbox=LocalSandbox())
-    adapter = NyveroAgentAdapter(FakeNyveroAgent())
-    result = adapter.run(Task(id="t1", instruction="do it"), harness=harness)
+def test_plain_loop_runs_tool_and_reports_outcome() -> None:
+    script = [
+        {"content": "", "tool_calls": [{"id": "1", "name": "bash", "arguments": '{"command": "ls"}'}]},
+        {"content": "done", "tool_calls": []},
+    ]
+    executed: list[tuple[str, dict]] = []
+    adapter = _adapter(script, executed, outcome=lambda task, ws: (True, 1.0))
+    result = adapter.run(Task(id="t1", instruction="list files"))
+    assert executed == [("bash", {"command": "ls"})]
     assert result.success is True
     assert result.reward == 1.0
     assert result.trajectory.num_steps == 1
-    assert result.trajectory.steps[0].action == {"name": "check", "arguments": {"value": "check"}, "raw": "check"}
 
 
-def test_nyvero_agent_adapter_without_harness() -> None:
-    adapter = NyveroAgentAdapter(FakeNyveroAgent())
-    result = adapter.run(Task(id="t1", instruction="do it"))
-    assert result.success is True
+def test_guard_blocks_a_dangerous_tool_call() -> None:
+    script = [
+        {"content": "", "tool_calls": [{"id": "1", "name": "bash", "arguments": '{"command": "rm -rf /"}'}]},
+        {"content": "done", "tool_calls": []},
+    ]
+    executed: list[tuple[str, dict]] = []
+    patch = HarnessPatch(
+        benchmark="nyvero",
+        hooks=(
+            CodeHook(
+                hook="on_before_action",
+                code=(
+                    "def hook(ctx, nb):\n"
+                    "    args = (ctx.get('action') or {}).get('arguments') or {}\n"
+                    "    if 'rm ' in str(args.get('command', '')):\n"
+                    "        return {'kind': 'block_and_prompt', 'message': 'No destructive commands.'}\n"
+                    "    return None\n"
+                ),
+            ),
+        ),
+    )
+    harness = ExecutableHarness.from_patch(patch, sandbox=LocalSandbox())
+    adapter = _adapter(script, executed, outcome=lambda task, ws: (True, 1.0))
+    result = adapter.run(Task(id="t1", instruction="clean up"), harness=harness)
+    assert executed == []  # the dangerous call never reached the executor
+    assert result.trajectory.steps[0].harness_effects[0]["kind"] == "block_and_prompt"
 
 
-def test_empty_nyvero_harness_is_noop() -> None:
-    adapter = NyveroHarnessAdapter(object())
-    assert adapter.is_noop is True
+def test_guard_can_rewrite_an_action() -> None:
+    script = [
+        {"content": "", "tool_calls": [{"id": "1", "name": "bash", "arguments": '{"command": "ls"}'}]},
+        {"content": "done", "tool_calls": []},
+    ]
+    executed: list[tuple[str, dict]] = []
+    patch = HarnessPatch(
+        benchmark="nyvero",
+        hooks=(
+            CodeHook(
+                hook="on_before_action",
+                code=(
+                    "def hook(ctx, nb):\n"
+                    "    args = (ctx.get('action') or {}).get('arguments') or {}\n"
+                    "    if args.get('command') == 'ls':\n"
+                    "        return {'kind': 'rewrite_action', 'action': 'ls -la'}\n"
+                    "    return None\n"
+                ),
+            ),
+        ),
+    )
+    harness = ExecutableHarness.from_patch(patch, sandbox=LocalSandbox())
+    adapter = _adapter(script, executed, outcome=lambda task, ws: (True, 1.0))
+    adapter.run(Task(id="t1", instruction="list"), harness=harness)
+    assert executed == [("bash", {"command": "ls -la"})]
+
+
+def test_workspace_check_runs_a_command(tmp_path: Path) -> None:
+    task = Task(id="t", instruction="x")
+    assert workspace_check("exit 0")(task, tmp_path) == (True, 1.0)
+    assert workspace_check("exit 3")(task, tmp_path) == (False, 0.0)
+
+
+def test_per_task_check_selects_by_task_id(tmp_path: Path) -> None:
+    check = per_task_check({"a": "exit 0", "b": "exit 1"})
+    assert check(Task(id="a", instruction="x"), tmp_path) == (True, 1.0)
+    assert check(Task(id="b", instruction="x"), tmp_path) == (False, 0.0)
+    assert check(Task(id="missing", instruction="x"), tmp_path) == (False, 0.0)
+
+
+def test_default_effect_applier_replaces_first_string_argument() -> None:
+    current = Action(name="bash", arguments={"command": "ls", "timeout": 5}, raw="ls")
+    patched = default_effect_applier("pwd", current)
+    assert patched.name == "bash"
+    assert patched.arguments["command"] == "pwd"
+
+
+def test_hook_bridge_returns_four_callables() -> None:
+    bridge = build_hook_bridge(None)
+    assert set(bridge) == {"on_init", "make_pre_hint", "on_before_action", "on_post_step"}
+    assert bridge["on_before_action"]({"state": {}, "action": {}}) is None

@@ -2,6 +2,24 @@
 
 from __future__ import annotations
 
-from harnyx.adapters.nyvero import NyveroAgentAdapter, NyveroHarnessAdapter, NyveroStep
+from harnyx.adapters.nyvero import (
+    EffectApplier,
+    NyveroAgentAdapter,
+    NyveroBackend,
+    OutcomeFn,
+    build_hook_bridge,
+    default_effect_applier,
+    per_task_check,
+    workspace_check,
+)
 
-__all__ = ["NyveroAgentAdapter", "NyveroHarnessAdapter", "NyveroStep"]
+__all__ = [
+    "EffectApplier",
+    "NyveroAgentAdapter",
+    "NyveroBackend",
+    "OutcomeFn",
+    "build_hook_bridge",
+    "default_effect_applier",
+    "per_task_check",
+    "workspace_check",
+]
