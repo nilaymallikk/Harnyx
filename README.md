@@ -1,12 +1,15 @@
-# Harnyx
+<div align="center">
+  <img src="https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/logo.png" alt="Harnyx" width="460">
+</div>
 
 **Learn to improve executable AI-agent harnesses from failure trajectories.**
 
-Harnyx is a clean, agent-agnostic Python library implementing the
-[Harness-R1](https://arxiv.org/abs/2608.02276) methodology: mine a batch of
-target-agent failures, have a harness engineer propose an executable runtime
-patch, sandbox it, rerun the *same* tasks, and accept it only when a real
-outcome improvement is measured.
+Harnyx is an agent-agnostic Python library implementing the method from the paper
+**Harness-R1: Learning to Edit Executable Runtime Harnesses from Agent Failure
+Trajectories** ([Shao et al., 2026, arXiv:2608.02276](https://arxiv.org/abs/2608.02276)).
+It mines a batch of target-agent failures, has an engineer model propose an
+executable runtime patch, sandboxes it, reruns the *same* tasks, and accepts it
+only when a real outcome improvement is measured.
 
 ```text
 target agent rollout
@@ -50,6 +53,35 @@ Use it when you can measure task outcomes and want your agent's success rate to
 improve automatically, without training the model.
 
 ![Harnyx architecture](https://raw.githubusercontent.com/nilaymallikk/Harnyx/main/assets/architecture.png)
+
+## What it actually does (a concrete example)
+
+Say your support agent has tools `lookup_order`, `issue_refund`, and `reply`,
+and its failure traces show a pattern: it calls `issue_refund` before a
+successful `lookup_order`, so the refund errors and the agent loops.
+
+The engineer reads those traces and writes **one hook**:
+
+```python
+def hook(ctx, nb):                          # on_before_action
+    action = str((ctx.get("action") or {}).get("name") or "")
+    verified = (ctx.get("state") or {}).get("order_verified")
+    if action == "issue_refund" and not verified:
+        return {"kind": "block_and_prompt",
+                "message": "Look up the order before refunding."}
+    return None
+```
+
+Harnyx then reruns the **same tasks** with and without that hook. If success
+improves and nothing that used to pass breaks, it is saved as `harness-v1` and
+becomes a tiny artifact you load next to your agent:
+
+```python
+harness = ExecutableHarness.from_patch(patch, sandbox=LocalSandbox())
+agent.run(task, harness=harness)
+```
+
+No model change, no new prompt framework - one reviewed, reversible code hook.
 
 ---
 
@@ -204,6 +236,18 @@ patch = HarnessPatch.from_dict(raw)
 harness = ExecutableHarness.from_patch(patch, sandbox=LocalSandbox())
 outcome = agent.run(task, harness=harness)   # your agent, now guarded
 ```
+
+## When not to use it
+
+- **No measurable outcome.** If you cannot compute a success/score per task there
+  is nothing to optimize - the reward is the rerun delta, not a judge.
+- **No failures.** If the agent already succeeds, there is no signal to learn from.
+- **The model or prompt can change freely.** That may be simpler; Harnyx is for a
+  fixed model where you want the runtime improved from evidence.
+- **Same-batch only.** The reward is transductive (the same tasks before/after),
+  exactly as in the paper - not a held-out generalization guarantee.
+- **Integration cost.** You must implement an `Environment` (and usually a
+  tool-calling `Policy`) for your domain.
 
 ## Nyvero example
 
